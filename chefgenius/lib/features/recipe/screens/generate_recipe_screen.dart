@@ -74,6 +74,65 @@ class _GenerateRecipeScreenState extends State<GenerateRecipeScreen> {
     await prefs.setBool(GenerateRecipeScreen.showcaseKey, true);
   }
 
+  // --- HELPER BARU: VISUAL KARTUN CHEF CEI ---
+  Widget _buildCeiShowcase({
+    required GlobalKey key,
+    required String title,
+    required String description,
+    required Widget child,
+    ShapeBorder? shapeBorder, 
+  }) {
+    return Showcase.withWidget(
+      key: key,
+      targetShapeBorder: shapeBorder ?? const CircleBorder(),
+      container: Container(
+        height: 230, 
+        width: 260,  
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // GAMBAR CHEF CEI GUIDE
+            Image.asset(
+              'assets/images/Chef_Cei/chefceiguide.png', 
+              height: 100,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.orange, 
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              description,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12, color: Colors.black87, height: 1.3),
+            ),
+          ],
+        ),
+      ),
+      child: child,
+    );
+  }
+  // ------------------------------------------
+
   Future<void> _checkIfFirstTime() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -193,7 +252,6 @@ class _GenerateRecipeScreenState extends State<GenerateRecipeScreen> {
       return;
     }
     
-    // Validasi Key dari Config
     if (GeminiConfig.apiKey.isEmpty) {
       if (!mounted) return;
       scaffoldMessenger.showSnackBar(const SnackBar(content: Text('API Key Google AI tidak ditemukan!'), backgroundColor: Colors.red));
@@ -305,7 +363,6 @@ class _GenerateRecipeScreenState extends State<GenerateRecipeScreen> {
         );
       }
     } catch (e) {
-      // ERROR HANDLING RAMAH
       if (!mounted) return;
       navigator.pop();
       _startCooldown();
@@ -376,10 +433,12 @@ class _GenerateRecipeScreenState extends State<GenerateRecipeScreen> {
                   ),
                   const SizedBox(height: 12),
                   
-                  Showcase(
+                  // 1. SHOWCASE PROMPT (INPUT)
+                  _buildCeiShowcase(
                     key: _promptKey,
                     title: '1. Tulis Ide Anda',
-                    description: 'Ketik bahan-bahan atau tujuan diet.',
+                    description: 'Ketik bahan-bahan atau tujuan diet yang lo mau.',
+                    shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -429,12 +488,18 @@ class _GenerateRecipeScreenState extends State<GenerateRecipeScreen> {
                   ),
                   const SizedBox(height: 24), 
 
-                  PersonaSelectorWidget(
-                    showcaseKey: _personaKey,
-                    selectedPersonaKey: _selectedPersonaKey,
-                    userLevel: _userLevel,
-                    isOffline: isOffline,
-                    onSelect: (key) => setState(() => _selectedPersonaKey = key),
+                  // 2. SHOWCASE PERSONA (WRAPPER)
+                  _buildCeiShowcase(
+                    key: _personaKey,
+                    title: '2. Pilih Koki',
+                    description: 'Pilih kepribadian Chef Cei yang bakal ngelayanin lo!',
+                    child: PersonaSelectorWidget(
+                      showcaseKey: GlobalKey(), // Pass dummy key biar yang di dalem gak aktif
+                      selectedPersonaKey: _selectedPersonaKey,
+                      userLevel: _userLevel,
+                      isOffline: isOffline,
+                      onSelect: (key) => setState(() => _selectedPersonaKey = key),
+                    ),
                   ),
 
                   RecipeSettingsSection(
@@ -488,10 +553,12 @@ class _GenerateRecipeScreenState extends State<GenerateRecipeScreen> {
 
                   const SizedBox(height: 24),
                   
-                  Showcase(
+                  // 3. SHOWCASE TOMBOL EKSEKUSI
+                  _buildCeiShowcase(
                     key: _buttonKey,
                     title: '5. Eksekusi!',
-                    description: 'Klik buat mulai generate.',
+                    description: 'Klik tombol ini dan biarkan Chef Cei bekerja!',
+                    shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     child: ElevatedButton.icon(
                       icon: isGenerating
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))

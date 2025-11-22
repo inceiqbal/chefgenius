@@ -178,15 +178,21 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.shopping_basket_outlined, size: 80, color: Colors.orange.withOpacity(0.3)),
-                        const SizedBox(height: 16),
+                        // --- VISUAL CHEF CEI MEGANG KERANJANG ---
+                        Image.asset(
+                          'assets/images/Chef_Cei/chefceimegangkeranjang.png', // Ganti Icon jadi Gambar
+                          height: 200, // Ukuran gambar disesuaikan
+                          fit: BoxFit.contain,
+                        ),
+                        const SizedBox(height: 24),
                         Text(
                           "Keranjang kosong melompong.", 
-                          style: TextStyle(color: Colors.grey[600], fontSize: 16)
+                          style: TextStyle(color: Colors.grey[600], fontSize: 16, fontWeight: FontWeight.bold),
                         ),
+                        const SizedBox(height: 8),
                         Text(
-                          "Yuk belanja!", 
-                          style: TextStyle(color: Colors.grey[400], fontSize: 14)
+                          "Yuk belanja bareng Cei!", 
+                          style: TextStyle(color: Colors.grey[400], fontSize: 14),
                         ),
                       ],
                     ),
