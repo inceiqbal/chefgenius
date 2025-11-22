@@ -95,6 +95,67 @@ class _PantryScreenState extends State<PantryScreen> {
     _loadUserStats();
   }
 
+  // --- HELPER BARU: CUSTOM SHOWCASE DENGAN GAMBAR CHEF CEI ---
+  // PERBAIKAN: height & width dipindah ke Container
+  Widget _buildCeiShowcase({
+    required GlobalKey key,
+    required String title,
+    required String description,
+    required Widget child,
+    ShapeBorder? shapeBorder, 
+  }) {
+    return Showcase.withWidget(
+      key: key,
+      // HAPUS height & width DARI SINI (Ini penyebab errornya)
+      targetShapeBorder: shapeBorder ?? const CircleBorder(),
+      container: Container( // PINDAHIN UKURANNYA KE SINI
+        height: 230, 
+        width: 260,  
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // GAMBAR CHEF CEI GUIDE
+            Image.asset(
+              'assets/images/Chef_Cei/chefceiguide.png', 
+              height: 100, // Ukuran gambar kartun
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.orange, 
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              description,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12, color: Colors.black87, height: 1.3),
+            ),
+          ],
+        ),
+      ),
+      child: child,
+    );
+  }
+  // ------------------------------------------------------------
+
   Future<void> _initializeData() async {
     final userEmail = supabase.auth.currentUser?.email ?? 'guest';
     final boxName = 'pantry_$userEmail';
@@ -413,17 +474,20 @@ class _PantryScreenState extends State<PantryScreen> {
       appBar: CustomAppBar(
         title: 'Pantry Saya',
         actions: [
-          Showcase(
+          // TOMBOL BANTUAN
+          _buildCeiShowcase(
             key: _helpKey,
             title: 'Bantuan',
-            description: 'Bingung? Klik ini buat ulangi tur petunjuk!',
+            description: 'Bingung? Klik ini buat ulangi tur petunjuk bareng Cei!',
             child: IconButton(
               icon: const Icon(Icons.help_outline),
               tooltip: 'Ulangi Tur',
               onPressed: _resetAndStartTour,
             ),
           ),
-          Showcase(
+          
+          // TOMBOL SHOPPING LIST
+          _buildCeiShowcase(
             key: _shoppingListKey,
             title: 'Keranjang Belanja',
             description: 'Cek barang yang mau dibeli di sini.',
@@ -435,7 +499,9 @@ class _PantryScreenState extends State<PantryScreen> {
               },
             ),
           ),
-          Showcase(
+          
+          // TOMBOL HISTORY
+          _buildCeiShowcase(
             key: _historyKey,
             title: 'Jejak Kuliner',
             description: 'Lupa tadi masak apa? Cek riwayat masakan lo di sini.',
@@ -447,6 +513,7 @@ class _PantryScreenState extends State<PantryScreen> {
               },
             ),
           ),
+          
           IconButton(
             icon: const Icon(Icons.person_outline),
             tooltip: 'Profil Saya',
@@ -460,13 +527,22 @@ class _PantryScreenState extends State<PantryScreen> {
           Column(
             children: [
               const OfflineBanner(),
-              ChefStatusBar(
-                showcaseKey: _levelingKey,
-                userXp: _userXp,
-                userLevel: _userLevel,
-                userTitle: _userTitle,
-                xpPerLevel: xpPerLevel,
+              
+              // STATUS BAR (LEVEL) - BENTUKNYA KOTAK (ROUNDED)
+              _buildCeiShowcase(
+                key: _levelingKey,
+                title: 'Level Memasak',
+                description: 'Makin sering masak, makin tinggi level lo!',
+                shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: ChefStatusBar(
+                  showcaseKey: GlobalKey(), // Key udah dipake di wrapper showcase
+                  userXp: _userXp,
+                  userLevel: _userLevel,
+                  userTitle: _userTitle,
+                  xpPerLevel: xpPerLevel,
+                ),
               ),
+              
               if (!isOffline)
                 QuickIngredientChips(
                   ingredients: _commonIngredients,
@@ -474,19 +550,31 @@ class _PantryScreenState extends State<PantryScreen> {
                   isAdding: _isAdding,
                   onAdd: _addIngredient,
                 ),
-              PantryInputSection(
-                showcaseKey: _addIngredientKey,
-                controller: _ingredientController,
-                isOffline: isOffline,
-                isAdding: _isAdding,
-                onScan: _scanIngredients,
-                onAdd: () => _addIngredient(),
+              
+              // INPUT SECTION
+              _buildCeiShowcase(
+                key: _addIngredientKey,
+                title: 'Input Bahan',
+                description: 'Ketik manual atau pake "Cei Vision" (Kamera) buat scan bahan otomatis!',
+                shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: PantryInputSection(
+                  showcaseKey: GlobalKey(), // Key dummy karena wrapper udah handle showcase
+                  controller: _ingredientController,
+                  isOffline: isOffline,
+                  isAdding: _isAdding,
+                  onScan: _scanIngredients,
+                  onAdd: () => _addIngredient(),
+                ),
               ),
+              
               const SizedBox(height: 8),
-              Showcase(
+              
+              // TOMBOL CARI RESEP
+              _buildCeiShowcase(
                 key: _searchNormalKey,
                 title: '3. Masak Dari Bahan Ini',
                 description: 'Cari resep yang BISA dimasak pake bahan-bahan di atas.',
+                shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)), // Sesuaikan bentuk tombol
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: ElevatedButton.icon(
@@ -503,6 +591,7 @@ class _PantryScreenState extends State<PantryScreen> {
                   ),
                 ),
               ),
+              
               const SizedBox(height: 16),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -530,11 +619,14 @@ class _PantryScreenState extends State<PantryScreen> {
                 ),
               ),
               const SizedBox(height: 4),
+              
+              // LIST PANTRY
               Expanded(
-                child: Showcase(
+                child: _buildCeiShowcase(
                   key: _pantryListKey,
                   title: '2. Cek Dapur Lo',
                   description: 'Bahan-bahan yang udah lo tambahin bakal nongol di sini.',
+                  shapeBorder: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                   child: _isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : ValueListenableBuilder(
@@ -578,16 +670,27 @@ class _PantryScreenState extends State<PantryScreen> {
               ),
             ],
           ),
-          RepoFloatingButton(
-            showcaseKey: _repoKey,
-            onReturn: () => _loadUserStats(), 
+          
+          // REPO BUTTON (Custom Widget)
+          // Asumsi RepoFloatingButton bentuknya lingkaran/oval
+          _buildCeiShowcase(
+            key: _repoKey,
+            title: 'Resep Favorit',
+            description: 'Kumpulan resep yang udah lo simpen ada di sini.',
+            child: RepoFloatingButton(
+              showcaseKey: GlobalKey(), // Key dummy
+              onReturn: () => _loadUserStats(), 
+            ),
           ),
         ],
       ),
-      floatingActionButton: Showcase(
+      
+      // TOMBOL AI GENERATE
+      floatingActionButton: _buildCeiShowcase(
         key: _generateAIKey,
         title: '7. Tanya Chef Cei!',
         description: 'Klik ini biar Chef Cei bikinin resep baru yang unik khusus buat lo!',
+        shapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)), // Extended FAB biasanya lonjong
         child: FloatingActionButton.extended(
           onPressed: () {
             if (isOffline) {

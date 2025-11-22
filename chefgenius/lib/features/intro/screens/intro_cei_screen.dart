@@ -195,17 +195,24 @@ class _IntroCeiScreenState extends State<IntroCeiScreen> with TickerProviderStat
                   },
                   child: Column(
                     children: [
+                      // --- BAGIAN INI YANG AKU PERBAIKI ---
                       Container(
                         height: 350,
                         width: 250,
                         decoration: BoxDecoration(
                           color: Colors.transparent,
                           image: DecorationImage(
-                            image: const NetworkImage('https://cdn-icons-png.flaticon.com/512/4681/4681828.png'), 
+                            // Pake Aset Lokal, bukan NetworkImage
+                            image: AssetImage(
+                              _showCeiVisionEffect 
+                                ? 'assets/images/Chef_Cei/chefceimatadewa.png' // Mode Mata Dewa
+                                : 'assets/images/Chef_Cei/chefceiintro.png'    // Mode Biasa
+                            ),
                             fit: BoxFit.contain,
-                            colorFilter: _showCeiVisionEffect 
-                              ? ColorFilter.mode(Colors.orange.withOpacity(0.2), BlendMode.srcATop) 
-                              : null,
+                            // Kalau pake aset sendiri yang udah berwarna, gak perlu di-tint oranye lagi
+                            // colorFilter: _showCeiVisionEffect 
+                            //   ? ColorFilter.mode(Colors.orange.withOpacity(0.2), BlendMode.srcATop) 
+                            //   : null,
                           ),
                         ),
                       ),
@@ -241,8 +248,8 @@ class _IntroCeiScreenState extends State<IntroCeiScreen> with TickerProviderStat
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      children: [
-                        const Text(
+                      children: const [
+                        Text(
                           "Chef Cei",
                           style: TextStyle(
                             color: Colors.orange,
