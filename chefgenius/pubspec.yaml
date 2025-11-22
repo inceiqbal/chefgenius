@@ -1,0 +1,62 @@
+name: chefgenius
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.3 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Library dasar & UI
+  cupertino_icons: ^1.0.6
+  cached_network_image: ^3.3.1
+  flutter_staggered_animations: ^1.1.1
+  lottie: ^3.1.0
+
+  # Untuk state management
+  provider: ^6.1.1
+  
+  # Untuk database lokal Hive
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.5
+  google_generative_ai: ^0.4.7
+
+  supabase_flutter: ^2.10.3
+  http: ^1.6.0
+  image_picker: ^1.2.0 
+  fuzzywuzzy: ^1.2.0
+  shared_preferences: ^2.5.3 
+  showcaseview: ^5.0.1  
+  connectivity_plus: ^7.0.0
+  #flutter_tts: ^4.2.3
+  audioplayers: ^6.5.1
+  share_plus: ^12.0.1
+  intl: ^0.20.2
+
+  
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+  flutter_launcher_icons: ^0.13.1
+  build_runner: 2.4.13
+  hive_generator: ^2.0.1
+
+  
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/data/initial_recipes.json
+    - assets/images/icon_chefgenius.png
+    - assets/images/Chef_Cei/
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/icon_chefgenius.png"
+  min_sdk_android: 21

@@ -1,0 +1,308 @@
+[
+  {
+    "id": 1,
+    "title": "Nasi Goreng Sederhana",
+    "description": "Sarapan klasik yang cepat dan lezat, cocok untuk segala suasana.",
+    "duration": "20 Menit",
+    "servings": "2 Porsi",
+    "imageUrl": "https://delishglobe.com/wp-content/uploads/2024/12/Nasi-Goreng-Fried-Rice-2048x1499.png",
+    "mainIngredients": ["Nasi", "Telur", "Bawang Merah", "Bawang Putih", "Kecap Manis"],
+    "allIngredients": [
+      {"name": "Nasi Putih Dingin", "quantity": "2 piring"},
+      {"name": "Telur Ayam", "quantity": "2 butir"},
+      {"name": "Bawang Merah", "quantity": "3 siung"},
+      {"name": "Bawang Putih", "quantity": "2 siung"},
+      {"name": "Kecap Manis", "quantity": "3 sdm"},
+      {"name": "Saus Tiram", "quantity": "1 sdm"},
+      {"name": "Daun Bawang", "quantity": "1 batang, iris"},
+      {"name": "Cabai Rawit (opsional)", "quantity": "sesuai selera"},
+      {"name": "Garam", "quantity": "1/2 sdt"},
+      {"name": "Merica Bubuk", "quantity": "1/4 sdt"},
+      {"name": "Minyak Goreng", "quantity": "2 sdm"}
+    ],
+    "steps": [
+      "Haluskan bawang merah, bawang putih, dan cabai rawit (jika pakai) menggunakan ulekan atau blender.",
+      "Panaskan minyak di wajan dengan api sedang-besar. Tumis bumbu halus hingga harum dan matang.",
+      "Sisihkan bumbu ke pinggir wajan. Masukkan telur, buat orak-arik hingga setengah matang, lalu aduk rata dengan bumbu.",
+      "Masukkan nasi putih. Aduk cepat dan tekan-tekan dengan spatula agar nasi yang menggumpal terurai dan tercampur rata dengan bumbu.",
+      "Tuangkan kecap manis dan saus tiram. Bumbui dengan garam dan merica. Aduk terus hingga semua nasi berwarna coklat merata dan sedikit kering.",
+      "Koreksi rasa. Jika sudah pas, masukkan irisan daun bawang, aduk sebentar lalu matikan api.",
+      "Sajikan segera selagi hangat, bisa ditambahkan telur mata sapi dan kerupuk sebagai pelengkap."
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Opor Ayam Khas Lebaran",
+    "description": "Hidangan ayam berkuah santan yang gurih dan kaya rempah, ikon masakan hari raya.",
+    "duration": "60 Menit",
+    "servings": "4 Porsi",
+    "imageUrl": "https://www.unileverfoodsolutions.co.id/dam/global-ufs/mcos/SEA/calcmenu/recipes/ID-recipes/chicken-&-other-poultry-dishes/opor-ayam/main-header.jpg/jcr:content/renditions/cq5dam.thumbnail.desktop.jpeg",
+    "mainIngredients": ["Ayam", "Santan", "Bawang Merah", "Bawang Putih", "Kemiri", "Kunyit"],
+    "allIngredients": [
+      {"name": "Ayam", "quantity": "1/2 ekor, potong 4"},
+      {"name": "Santan Kental", "quantity": "200 ml"},
+      {"name": "Santan Encer", "quantity": "500 ml"},
+      {"name": "Bawang Merah", "quantity": "6 siung"},
+      {"name": "Bawang Putih", "quantity": "3 siung"},
+      {"name": "Kemiri", "quantity": "3 butir, sangrai"},
+      {"name": "Ketumbar Bubuk", "quantity": "1 sdt"},
+      {"name": "Kunyit Bakar", "quantity": "2 cm"},
+      {"name": "Lengkuas", "quantity": "2 cm, memarkan"},
+      {"name": "Daun Salam", "quantity": "2 lembar"},
+      {"name": "Sereh", "quantity": "1 batang, memarkan"},
+      {"name": "Garam", "quantity": "1 sdt"},
+      {"name": "Gula Pasir", "quantity": "1 sdt"}
+    ],
+    "steps": [
+      "Haluskan bawang merah, bawang putih, kemiri sangrai, ketumbar, dan kunyit hingga menjadi pasta bumbu yang lembut.",
+      "Panaskan sedikit minyak, tumis bumbu halus bersama lengkuas, daun salam, dan sereh hingga matang dan harum.",
+      "Masukkan potongan ayam, aduk hingga berubah warna dan terbalut bumbu.",
+      "Tuangkan santan encer, aduk rata. Masak dengan api sedang hingga ayam empuk.",
+      "Setelah ayam empuk, tuangkan santan kental, garam, dan gula. Kecilkan api.",
+      "Aduk perlahan secara terus-menerus agar santan tidak pecah. Masak hingga kuah sedikit mengental.",
+      "Koreksi rasa, angkat dan sajikan dengan taburan bawang goreng."
+    ]
+  },
+  {
+    "id": 3,
+    "title": "Sate Ayam Madura",
+    "description": "Sate ayam dengan bumbu kacang khas Madura yang kaya rasa.",
+    "duration": "45 Menit",
+    "servings": "3 Porsi",
+    "imageUrl": "https://i0.wp.com/resepkoki.id/wp-content/uploads/2017/02/Resep-Sate-Ayam-Madura.jpg?fit=500%2C470&ssl=1",
+    "mainIngredients": ["Ayam", "Kacang Tanah", "Kecap Manis", "Bawang Merah"],
+    "allIngredients": [
+      {"name": "Dada Ayam Fillet", "quantity": "300 gr"},
+      {"name": "Kacang Tanah", "quantity": "150 gr, goreng"},
+      {"name": "Bawang Merah", "quantity": "4 siung"},
+      {"name": "Bawang Putih", "quantity": "2 siung"},
+      {"name": "Kemiri", "quantity": "2 butir, sangrai"},
+      {"name": "Kecap Manis", "quantity": "5 sdm"},
+      {"name": "Gula Merah", "quantity": "1 sdm, sisir"},
+      {"name": "Air Asam Jawa", "quantity": "1 sdm"},
+      {"name": "Garam", "quantity": "secukupnya"},
+      {"name": "Tusuk Sate", "quantity": "secukupnya"}
+    ],
+    "steps": [
+      "Potong dadu dada ayam, sisihkan.",
+      "Untuk bumbu kacang: haluskan kacang tanah goreng, bawang merah, bawang putih, dan kemiri. Anda bisa menggunakan blender.",
+      "Masak bumbu yang sudah dihaluskan dengan sedikit air, tambahkan kecap manis, gula merah, air asam jawa, dan garam. Masak hingga mengental dan mengeluarkan minyak. Sisihkan.",
+      "Ambil 3-4 sdm bumbu kacang, tambahkan sedikit kecap manis dan air, gunakan sebagai bumbu olesan.",
+      "Lumuri potongan ayam dengan bumbu olesan, diamkan selama 15 menit.",
+      "Tusuk 3-4 potong ayam pada setiap tusuk sate.",
+      "Bakar sate di atas arang atau teflon hingga matang, sambil sesekali diolesi sisa bumbu olesan.",
+      "Sajikan sate dengan siraman sisa bumbu kacang, irisan bawang merah mentah, dan lontong."
+    ]
+  },
+  {
+    "id": 4,
+    "title": "Rendang Daging",
+    "description": "Masakan daging sapi kaya rempah dengan santan yang dimasak hingga kering.",
+    "duration": "3 Jam",
+    "servings": "5 Porsi",
+    "imageUrl": "https://awsimages.detik.net.id/community/media/visual/2025/03/27/resep-rendang-asli-padang-1743042209951_43.jpeg?w=600&q=90",
+    "mainIngredients": ["Daging Sapi", "Santan", "Cabai Merah", "Lengkuas", "Sereh"],
+    "allIngredients": [
+      {"name": "Daging Sapi (potongan rendang)", "quantity": "500 gr"},
+      {"name": "Santan Kental (dari 2 butir kelapa)", "quantity": "1.5 liter"},
+      {"name": "Cabai Merah Keriting", "quantity": "100 gr"},
+      {"name": "Bawang Merah", "quantity": "10 siung"},
+      {"name": "Bawang Putih", "quantity": "5 siung"},
+      {"name": "Jahe", "quantity": "2 cm"},
+      {"name": "Kunyit Bakar", "quantity": "2 cm"},
+      {"name": "Lengkuas", "quantity": "3 cm, memarkan"},
+      {"name": "Sereh", "quantity": "2 batang, memarkan"},
+      {"name": "Daun Kunyit", "quantity": "1 lembar, simpulkan"},
+      {"name": "Daun Jeruk", "quantity": "4 lembar"},
+      {"name": "Asam Kandis", "quantity": "2 buah"}
+    ],
+    "steps": [
+      "Haluskan cabai merah, bawang merah, bawang putih, jahe, dan kunyit.",
+      "Tuang santan ke dalam wajan besar. Masukkan bumbu halus, lengkuas, sereh, daun kunyit, daun jeruk, dan asam kandis.",
+      "Masak di atas api sedang sambil terus diaduk perlahan hingga santan mendidih dan mengeluarkan minyak. Proses ini penting agar santan tidak pecah.",
+      "Setelah santan berminyak, masukkan potongan daging sapi. Aduk rata.",
+      "Lanjutkan memasak, aduk sesekali. Kecilkan api saat kuah mulai mengental.",
+      "Terus masak selama 2-3 jam atau hingga kuah santan mengering, bumbu meresap sempurna, dan rendang berwarna coklat gelap. Aduk lebih sering di tahap akhir agar tidak gosong.",
+      "Rendang siap disajikan."
+    ]
+  },
+  {
+    "id": 5,
+    "title": "Soto Ayam Lamongan",
+    "description": "Soto ayam bening dengan ciri khas koya yang gurih.",
+    "duration": "75 Menit",
+    "servings": "4 Porsi",
+    "imageUrl": "https://assets.pikiran-rakyat.com/crop/0x508:822x1011/750x500/photo/2022/04/26/2747824482.jpg",
+    "mainIngredients": ["Ayam", "Sereh", "Daun Jeruk", "Kunyit", "Telur"],
+    "allIngredients": [
+      {"name": "Ayam Kampung", "quantity": "1/2 ekor"},
+      {"name": "Air", "quantity": "2 liter"},
+      {"name": "Sereh", "quantity": "2 batang, memarkan"},
+      {"name": "Daun Jeruk", "quantity": "5 lembar"},
+      {"name": "Bawang Putih", "quantity": "4 siung"},
+      {"name": "Bawang Merah", "quantity": "3 siung"},
+      {"name": "Kemiri", "quantity": "3 butir, sangrai"},
+      {"name": "Kunyit Bakar", "quantity": "3 cm"},
+      {"name": "Bahan Koya (haluskan)", "quantity": "Kerupuk udang & bawang putih goreng"},
+      {"name": "Pelengkap", "quantity": "Soun, Tauge, Seledri, Telur Rebus"}
+    ],
+    "steps": [
+      "Rebus ayam dalam 2 liter air hingga empuk. Angkat ayam, sisihkan kaldunya. Goreng ayam hingga kecoklatan lalu suwir-suwir.",
+      "Haluskan bawang putih, bawang merah, kemiri, dan kunyit.",
+      "Tumis bumbu halus hingga harum, masukkan sereh dan daun jeruk. Masak hingga matang.",
+      "Masukkan tumisan bumbu ke dalam air kaldu. Masak kembali hingga mendidih. Bumbui dengan garam dan gula.",
+      "Untuk koya: haluskan kerupuk udang yang sudah digoreng bersama beberapa siung bawang putih goreng.",
+      "Cara penyajian: Tata soun, tauge, dan suwiran ayam di mangkuk. Siram dengan kuah soto panas. Sajikan dengan irisan telur, seledri, dan taburan koya."
+    ]
+  },
+  {
+    "id": 6,
+    "title": "Gado-Gado",
+    "description": "Salad sayuran rebus yang disiram dengan saus kacang.",
+    "duration": "30 Menit",
+    "servings": "3 Porsi",
+    "imageUrl": "https://cdn.rri.co.id/berita/1/images/1692921303952-images_(7)_(8)/1692921303952-images_(7)_(8).jpeg",
+    "mainIngredients": ["Kacang Tanah", "Kentang", "Tahu", "Telur", "Lontong"],
+    "allIngredients": [
+      {"name": "Kacang Tanah Goreng", "quantity": "200 gr"},
+      {"name": "Gula Merah", "quantity": "50 gr"},
+      {"name": "Cabai Rawit", "quantity": "sesuai selera"},
+      {"name": "Air Asam Jawa", "quantity": "2 sdm"},
+      {"name": "Santan", "quantity": "150 ml"},
+      {"name": "Sayuran Rebus", "quantity": "Kangkung, Tauge, Kacang Panjang"},
+      {"name": "Kentang Rebus", "quantity": "2 buah"},
+      {"name": "Tahu Goreng", "quantity": "2 buah"},
+      {"name": "Tempe Goreng", "quantity": "1 papan"},
+      {"name": "Telur Rebus", "quantity": "2 butir"},
+      {"name": "Lontong/Nasi", "quantity": "secukupnya"}
+    ],
+    "steps": [
+      "Siapkan saus kacang: haluskan kacang tanah, gula merah, cabai rawit, dan sedikit garam. Anda bisa menggunakan ulekan atau blender.",
+      "Setelah halus, pindahkan ke panci. Tambahkan air asam jawa dan santan. Masak dengan api kecil sambil diaduk hingga saus mengental dan matang. Koreksi rasa.",
+      "Rebus semua sayuran secara terpisah hingga matang namun masih renyah. Tiriskan.",
+      "Potong-potong kentang, tahu, tempe, telur, dan lontong.",
+      "Tata semua bahan (sayuran dan pelengkap) di atas piring saji.",
+      "Siram dengan saus kacang yang melimpah. Sajikan segera dengan taburan bawang goreng dan kerupuk."
+    ]
+  },
+  {
+    "id": 7,
+    "title": "Bakso Sapi",
+    "description": "Bola daging sapi kenyal disajikan dengan kuah kaldu panas.",
+    "duration": "90 Menit",
+    "servings": "4 Porsi",
+    "imageUrl": "https://awsimages.detik.net.id/community/media/visual/2019/08/12/dca21bf3-923c-486f-bc2e-a3dcd759b1df_43.jpeg?w=1200",
+    "mainIngredients": ["Daging Sapi", "Tepung Tapioka", "Bawang Putih", "Lada"],
+    "allIngredients": [
+      {"name": "Daging Sapi Giling (tanpa lemak)", "quantity": "250 gr"},
+      {"name": "Tepung Tapioka/Sagu", "quantity": "50 gr"},
+      {"name": "Bawang Putih", "quantity": "3 siung, haluskan"},
+      {"name": "Bawang Merah Goreng", "quantity": "1 sdm, haluskan"},
+      {"name": "Putih Telur", "quantity": "1 butir"},
+      {"name": "Es Batu", "quantity": "50 gr, hancurkan"},
+      {"name": "Garam", "quantity": "1 sdt"},
+      {"name": "Merica Bubuk", "quantity": "1/2 sdt"},
+      {"name": "Kaldu Sapi", "quantity": "1.5 liter (untuk kuah)"}
+    ],
+    "steps": [
+      "Dalam food processor atau blender, masukkan daging giling, bawang halus, bawang goreng, putih telur, garam, dan merica. Proses hingga tercampur rata.",
+      "Masukkan es batu sedikit demi sedikit sambil terus diproses hingga adonan menjadi pasta yang sangat halus, lembut, dan kenyal.",
+      "Tambahkan tepung tapioka, proses sebentar hingga tercampur sempurna. Jangan terlalu lama agar tidak keras.",
+      "Didihkan air yang banyak dalam panci. Setelah mendidih, kecilkan api hingga air tidak bergejolak.",
+      "Ambil segenggam adonan, kepalkan, dan tekan hingga adonan keluar dari sela-sela ibu jari dan telunjuk. Ambil dengan sendok dan masukkan ke dalam air panas. Ulangi hingga adonan habis.",
+      "Besarkan api, rebus bakso hingga semuanya mengapung. Biarkan mengapung selama 5-10 menit untuk memastikan bagian dalamnya matang. Angkat dan tiriskan.",
+      "Sajikan bakso dengan kuah kaldu panas, bihun, mi, sawi, seledri, dan bawang goreng."
+    ]
+  },
+  {
+    "id": 8,
+    "title": "Gudeg Jogja",
+    "description": "Masakan nangka muda yang dimasak dengan santan dan gula aren.",
+    "duration": "4 Jam",
+    "servings": "6 Porsi",
+    "imageUrl": "https://awsimages.detik.net.id/community/media/visual/2023/05/31/gudeg-1_169.jpeg?w=600&q=90",
+    "mainIngredients": ["Nangka Muda", "Santan", "Gula Aren", "Telur"],
+    "allIngredients": [
+      {"name": "Nangka Muda (Gori)", "quantity": "500 gr, potong-potong"},
+      {"name": "Santan (dari 1 butir kelapa)", "quantity": "800 ml"},
+      {"name": "Gula Aren", "quantity": "100 gr, sisir halus"},
+      {"name": "Telur Ayam Rebus", "quantity": "6 butir, kupas"},
+      {"name": "Daun Salam", "quantity": "4 lembar"},
+      {"name": "Lengkuas", "quantity": "4 cm, memarkan"},
+      {"name": "Bawang Merah", "quantity": "8 siung"},
+      {"name": "Bawang Putih", "quantity": "4 siung"},
+      {"name": "Ketumbar Bubuk", "quantity": "1 sdm"},
+      {"name": "Garam", "quantity": "1 sdt"}
+    ],
+    "steps": [
+      "Haluskan bawang merah, bawang putih, dan ketumbar.",
+      "Alasi dasar panci tebal (atau kendil) dengan beberapa lembar daun salam.",
+      "Masukkan potongan nangka muda, bumbu halus, gula aren, lengkuas, dan sisa daun salam.",
+      "Letakkan telur rebus di atasnya.",
+      "Tuangkan santan hingga semua bahan terendam. Bumbui dengan garam.",
+      "Masak dengan api kecil dan panci tertutup selama minimal 3-4 jam. Jangan sering diaduk agar nangka tidak hancur.",
+      "Masak terus hingga santan meresap habis, gudeg berwarna coklat kemerahan, dan sangat empuk. Koreksi rasa.",
+      "Sajikan gudeg dengan nasi hangat dan sambal krecek."
+    ]
+  },
+  {
+    "id": 9,
+    "title": "Ikan Bakar Jimbaran",
+    "description": "Ikan laut yang dibakar dengan bumbu khas Bali.",
+    "duration": "40 Menit",
+    "servings": "2 Porsi",
+    "imageUrl": "https://awsimages.detik.net.id/community/media/visual/2020/12/30/ikan-bakar-jimbaran-bali-3.jpeg?w=600&q=90",
+    "mainIngredients": ["Ikan", "Bawang Merah", "Bawang Putih", "Cabai Merah", "Terasi"],
+    "allIngredients": [
+      {"name": "Ikan Gurame/Kerapu", "quantity": "1 ekor (500 gr)"},
+      {"name": "Jeruk Nipis", "quantity": "1 buah"},
+      {"name": "Bawang Merah", "quantity": "5 siung"},
+      {"name": "Bawang Putih", "quantity": "3 siung"},
+      {"name": "Cabai Merah Besar", "quantity": "3 buah"},
+      {"name": "Kunyit Bakar", "quantity": "2 cm"},
+      {"name": "Terasi Bakar", "quantity": "1 sdt"},
+      {"name": "Kecap Manis", "quantity": "3 sdm"},
+      {"name": "Minyak Kelapa", "quantity": "2 sdm"}
+    ],
+    "steps": [
+      "Bersihkan ikan, kerat-kerat kedua sisinya. Lumuri dengan perasan jeruk nipis dan sedikit garam. Diamkan 15 menit.",
+      "Haluskan bumbu: bawang merah, bawang putih, cabai merah, kunyit, dan terasi.",
+      "Campurkan bumbu halus dengan kecap manis dan minyak kelapa. Aduk rata.",
+      "Olesi ikan secara merata dengan bumbu. Pastikan bumbu masuk ke dalam keratan ikan.",
+      "Bakar ikan di atas arang atau teflon pemanggang.",
+      "Bolak-balik ikan sambil terus diolesi sisa bumbu hingga matang sempurna di kedua sisi.",
+      "Sajikan segera dengan sambal matah dan nasi hangat."
+    ]
+  },
+  {
+    "id": 10,
+    "title": "Sayur Asem",
+    "description": "Sayur berkuah asam segar dengan berbagai macam isian sayuran.",
+    "duration": "30 Menit",
+    "servings": "4 Porsi",
+    "imageUrl": "https://i0.wp.com/resepkoki.id/wp-content/uploads/2017/02/Resep-Sayur-asem-jawa-tengah.jpg?fit=1920%2C1920&ssl=1",
+    "mainIngredients": ["Asam Jawa", "Jagung Manis", "Kacang Panjang", "Labu Siam"],
+    "allIngredients": [
+      {"name": "Jagung Manis", "quantity": "1 buah, potong-potong"},
+      {"name": "Labu Siam", "quantity": "1 buah, potong dadu"},
+      {"name": "Kacang Panjang", "quantity": "5 helai, potong-potong"},
+      {"name": "Melinjo dan Daunnya", "quantity": "segenggam"},
+      {"name": "Nangka Muda", "quantity": "100 gr, rebus sebentar"},
+      {"name": "Air", "quantity": "1.5 liter"},
+      {"name": "Asam Jawa", "quantity": "2 sdm, larutkan"},
+      {"name": "Lengkuas", "quantity": "2 cm, memarkan"},
+      {"name": "Daun Salam", "quantity": "2 lembar"},
+      {"name": "Gula Merah", "quantity": "1 sdm"},
+      {"name": "Garam", "quantity": "secukupnya"}
+    ],
+    "steps": [
+      "Siapkan bumbu halus: ulek bawang merah, kemiri, dan cabai merah hingga halus.",
+      "Didihkan air dalam panci. Masukkan bumbu halus, lengkuas, dan daun salam.",
+      "Masukkan sayuran yang paling keras terlebih dahulu: melinjo dan jagung. Masak hingga setengah empuk.",
+      "Masukkan nangka muda dan labu siam. Masak beberapa menit.",
+      "Tambahkan air asam jawa, gula merah, dan garam. Aduk rata.",
+      "Terakhir, masukkan sayuran yang cepat matang seperti kacang panjang dan daun melinjo. Masak sebentar jangan sampai terlalu layu.",
+      "Koreksi rasa asam, manis, dan asinnya. Angkat dan sajikan selagi hangat."
+    ]
+  }
+]
