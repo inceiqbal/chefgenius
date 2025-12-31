@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChefGenius - Masak Cerdas dengan AI & Komunitas Inzara</title>
+    <meta name="description" content="Aplikasi resep pintar dengan AI, Shopping List, dan komunitas Inzara. Masak, bagikan, dan jadi Chef Genius!">
+    
+    <!-- FAVICON -->
+    <link rel="icon" type="image/png" href="/assets/images/icon_chefgenius.png">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts (Plus Jakarta Sans) -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Icons (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- CUSTOM STYLES (Gabungan dari style.css kamu) -->
+    <style>
+        /* Import Font (Backup kalau link di head gagal) */
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap');
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+        }
+
+        /* --- UTILITIES --- */
+        .gradient-text {
+            background: linear-gradient(to right, #ea580c, #f59e0b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .bg-pattern {
+            background-color: #ffffff;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ea580c' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Hide Scrollbar but allow scroll */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* --- MOCKUP PHONE FRAME --- */
+        .phone-frame {
+            /* Warna frame menyesuaikan Dark Mode Flutter: Blue-Gray 900 */
+            border: 12px solid #1e293b; 
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            background-color: #121212; /* Fallback color */
+        }
+
+        /* --- FLUTTER UI CUSTOM STYLING --- */
+        /* Custom Input/Select Border */
+        .flutter-input-border {
+            border: 1px solid rgba(255, 152, 0, 0.2); /* Orange 200/300 with opacity */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+            transition: all 0.2s;
+        }
+        .flutter-input-border:focus-within {
+             border-color: #f97316; /* Orange 600 */
+             box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.1), 0 4px 6px -4px rgba(249, 115, 22, 0.1);
+        }
+        .flutter-card {
+            background-color: #1f2937; /* Darker background for card in Dark Mode */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Custom Segmented Button */
+        .segmented-button input[type="radio"]:checked + label {
+            background-color: #ffedd5; /* Orange 100 */
+            color: #9a3412; /* Orange 900 */
+            border-color: #fb923c !important;
+            font-weight: 700;
+        }
+        .segmented-button label {
+            border: 1px solid rgba(255, 152, 0, 0.5); /* Orange border */
+            border-radius: 12px;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        /* --- POST VIEWER MODAL & ANIMATION --- */
+        #post-viewer {
+            /* Konfigurasi default modal (overlay) */
+            background-color: rgb(15 23 42 / 0.9); /* slate-900/90 */
+            backdrop-filter: blur(4px);
+            /* padding: 1rem; -- Dipindah ke Tailwind class p-4 di HTML agar responsif */
+            z-index: 60; 
+            /* align-items: center; -- Dipindah ke flex items-center di HTML */
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        #post-viewer > div {
+            /* Konfigurasi default modal inner content */
+            /* max-width: 32rem; -- Dipindah ke max-w-lg di HTML */
+            border-radius: 1.5rem; /* rounded-3xl */
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); /* shadow-2xl */
+            animation: fade-in-up 0.6s ease-out forwards;
+        }
+
+        /* Keyframes untuk animasi modal muncul */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translate3d(0, 40px, 0);
+            }
+            to {
+                opacity: 1;
+                transform: translate3d(0, 0, 0);
+            }
+        }
+
+        /* Utility class untuk animasi (dipakai di elemen lain juga) */
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased overflow-x-hidden selection:bg-orange-200 selection:text-orange-900 relative">
+
+    <!-- POP-UP SYARAT & KETENTUAN (MODAL BARU) -->
+    <div id="terms-modal" class="fixed inset-0 z-[100] bg-slate-900/90 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div class="bg-white w-full max-w-2xl rounded-2xl p-6 md:p-8 shadow-2xl relative flex flex-col max-h-[85vh] transform scale-95 transition-transform duration-300">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-4">
+                <h3 class="text-xl font-extrabold text-slate-900">Syarat & Ketentuan</h3>
+                <button onclick="closeTermsModal()" class="text-slate-400 hover:text-slate-600 transition">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <!-- Scrollable Content -->
+            <div class="overflow-y-auto pr-2 text-sm text-slate-600 leading-relaxed space-y-4">
+                <p class="text-xs text-slate-400">Terakhir diperbarui: 29 November 2025</p>
+                <p>Selamat datang di <strong>Chef Genius!</strong> Dengan mengunduh, mengakses, atau menggunakan aplikasi seluler Chef Genius ("Aplikasi"), Anda menyatakan telah membaca, memahami, dan menyetujui Syarat & Ketentuan ("S&K") ini. Jika Anda tidak menyetujui S&K ini, mohon untuk tidak menggunakan Aplikasi.</p>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800">1. Ketentuan Usia</h4>
+                    <p>Aplikasi ini ditujukan untuk pengguna berusia minimal 13 tahun. Dengan menggunakan Aplikasi, Anda menyatakan bahwa Anda memenuhi persyaratan usia tersebut.</p>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800">2. Akun Pengguna</h4>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Untuk mengakses fitur tertentu seperti menyimpan resep favorit dan manajemen pantry, Anda harus membuat akun.</li>
+                        <li>Anda bertanggung jawab penuh atas keamanan akun, termasuk kerahasiaan kata sandi.</li>
+                        <li>Segala aktivitas yang terjadi melalui akun Anda menjadi tanggung jawab Anda.</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800">3. Penggunaan Aplikasi</h4>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Aplikasi ini menyediakan inspirasi resep, pengelolaan bahan (pantry), serta pembuatan resep menggunakan kecerdasan buatan (AI).</li>
+                        <li>Chef Genius memberikan lisensi terbatas, non-eksklusif, tidak dapat dialihkan, dan hanya untuk penggunaan pribadi serta non-komersial.</li>
+                        <li>Dilarang menggunakan Aplikasi untuk tujuan ilegal atau melanggar hukum yang berlaku.</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800">4. Penafian (Disclaimer) Resep AI & Kesehatan</h4>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Fitur resep AI menghasilkan resep secara otomatis dan mungkin belum teruji. Resep AI disediakan sebagaimana adanya (as-is) tanpa jaminan apa pun.</li>
+                        <li>Anda bertanggung jawab penuh atas penggunaan, pengolahan, dan konsumsi resep yang dihasilkan.</li>
+                        <li><strong>Penafian Kesehatan:</strong> Chef Genius bukan layanan medis atau nutrisi profesional. Kami tidak memberikan nasihat medis, diet klinis, atau rekomendasi kesehatan khusus. Jika Anda memiliki alergi, kondisi kesehatan tertentu, atau kebutuhan diet khusus, konsultasikan dengan tenaga kesehatan atau ahli gizi profesional sebelum mengikuti resep apa pun.</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800">5. Konten Pengguna (Inzara)</h4>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Pengguna bertanggung jawab penuh atas foto, komentar, dan konten lain yang dipublikasikan.</li>
+                        <li>Dilarang memposting konten yang mengandung SARA, pornografi, kekerasan, ujaran kebencian, atau melanggar hukum.</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800">6. Pelaporan & Moderasi</h4>
+                    <p>Jika Anda menemukan konten yang tidak pantas, silakan gunakan fitur Lapor atau hubungi admin. Kami berhak meninjau, menyembunyikan, atau menghapus konten serta akun yang melanggar, dengan atau tanpa pemberitahuan.</p>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800">7. Kebijakan Privasi</h4>
+                    <p>Penggunaan Aplikasi juga tunduk pada Kebijakan Privasi Chef Genius.</p>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800">8. Perubahan Syarat & Ketentuan</h4>
+                    <p>Kami dapat memperbarui S&K ini dari waktu ke waktu. Perubahan akan berlaku sejak dipublikasikan. Penggunaan Aplikasi setelah perubahan berarti Anda menyetujui versi terbaru.</p>
+                </div>
+            </div>
+
+            <!-- Footer Action -->
+            <div class="mt-6 pt-4 border-t border-slate-100">
+                <button onclick="closeTermsModal()" class="w-full bg-slate-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-slate-800 transition">
+                    Saya Mengerti
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- POP-UP KEBIJAKAN PRIVASI (MODAL BARU) -->
+    <div id="privacy-modal" class="fixed inset-0 z-[100] bg-slate-900/90 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div class="bg-white w-full max-w-2xl rounded-2xl p-6 md:p-8 shadow-2xl relative flex flex-col max-h-[85vh] transform scale-95 transition-transform duration-300">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-4">
+                <h3 class="text-xl font-extrabold text-slate-900">Kebijakan Privasi</h3>
+                <button onclick="closePrivacyModal()" class="text-slate-400 hover:text-slate-600 transition">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <!-- Scrollable Content -->
+            <div class="overflow-y-auto pr-2 text-sm text-slate-600 leading-relaxed space-y-4">
+                <p>Chef Genius menghargai privasi Anda. Kebijakan Privasi ini menjelaskan cara kami mengumpulkan, menggunakan, menyimpan, dan melindungi informasi Anda.</p>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800">1. Informasi yang Kami Kumpulkan</h4>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Nama dan alamat email</li>
+                        <li>Kata sandi (dalam bentuk terenkripsi)</li>
+                        <li>Data pantry, resep favorit, dan aktivitas penggunaan Aplikasi</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800">2. Penggunaan Informasi</h4>
+                    <p>Informasi digunakan untuk:</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Pembuatan dan pengelolaan akun</li>
+                        <li>Autentikasi (login & reset kata sandi)</li>
+                        <li>Personalisasi dan rekomendasi resep</li>
+                        <li>Penyimpanan data pengguna</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800">3. Penyimpanan & Keamanan Data</h4>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Data disimpan menggunakan layanan pihak ketiga yang aman (Supabase).</li>
+                        <li>Kata sandi di-hash dan dienkripsi.</li>
+                        <li>Kami menerapkan langkah teknis dan organisasi yang wajar untuk melindungi data dari akses tidak sah.</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800">4. Pembagian Informasi</h4>
+                    <p>Kami tidak menjual, menyewakan, atau membagikan data pribadi Anda kepada pihak ketiga untuk tujuan pemasaran.</p>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800">5. Kontrol oleh Pengguna</h4>
+                    <p>Anda dapat mengakses, memperbarui, atau menghapus data profil melalui fitur Edit Profil di Aplikasi.</p>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800">6. Konten Publik (Inzara)</h4>
+                    <p>Konten yang Anda unggah ke komunitas Inzara (foto dan komentar) bersifat publik. Jangan membagikan informasi pribadi atau sensitif.</p>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800">7. Kontak</h4>
+                    <p>Jika Anda memiliki pertanyaan terkait Kebijakan Privasi atau S&K, silakan hubungi:</p>
+                    <ul class="list-none space-y-1 mt-1 text-slate-800 font-medium">
+                        <li>Instagram: <a href="https://instagram.com/inceiqbal" target="_blank" class="text-orange-600 hover:underline">@inceiqbal</a></li>
+                        <li>WhatsApp: <a href="https://wa.me/6287845245720" target="_blank" class="text-orange-600 hover:underline">087845245720</a></li>
+                    </ul>
+                </div>
+                
+                <p class="text-xs pt-4 italic border-t border-slate-100 mt-4">Dengan menggunakan Chef Genius, Anda menyetujui Kebijakan Privasi ini.</p>
+            </div>
+
+            <!-- Footer Action -->
+            <div class="mt-6 pt-4 border-t border-slate-100">
+                <button onclick="closePrivacyModal()" class="w-full bg-slate-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-slate-800 transition">
+                    Saya Mengerti
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- POP-UP BELUM RILIS APLIKASI -->
+    <div id="release-modal" class="fixed inset-0 z-[100] bg-slate-900/90 hidden flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl relative text-center transform scale-95 transition-transform duration-300">
+            <div class="bg-orange-100 p-4 rounded-full inline-block text-orange-600 mb-4">
+                <i data-lucide="bell" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-xl font-extrabold text-slate-900 mb-2">ChefGenius Belum Rilis!</h3>
+            <p class="text-slate-600 mb-6">
+                Kami sedang meracik update terakhir. Aplikasi ChefGenius akan segera tersedia di Google Play Store! 🚀
+            </p>
+            <button onclick="closeReleaseModal()" class="w-full bg-orange-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-orange-700 transition">
+                Mengerti
+            </button>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center gap-3">
+                    <!-- LOGO APLIKASI -->
+                    <img src="/assets/images/icon_chefgenius.png" onerror="this.onerror=null;this.src='https://placehold.co/40x40/ea580c/ffffff?text=CG'" alt="ChefGenius Logo" class="w-10 h-10 object-contain drop-shadow-sm rounded-full bg-white">
+                    <span class="font-extrabold text-2xl tracking-tight text-slate-900">ChefGenius</span>
+                </div>
+                <div class="hidden md:flex space-x-8 items-center font-medium">
+                    <a href="#ai-features" class="text-slate-600 hover:text-orange-600 transition">Smart AI</a>
+                    <a href="#inzara" class="text-slate-600 hover:text-orange-600 transition">Inzara</a>
+                    <a href="#safety" class="text-slate-600 hover:text-orange-600 transition">Keamanan</a>
+                </div>
+                <button onclick="openReleaseModal()" class="bg-slate-900 text-white px-6 py-2.5 rounded-full font-bold hover:bg-orange-600 transition shadow-lg hover:shadow-orange-200 transform hover:-translate-y-0.5">
+                    Download App
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- WEB VIEWER MODAL (Hidden by default) -->
+    <!-- Class hidden, opacity-0, dll diatur via JS juga saat attemptDeepLink -->
+    <div id="post-viewer" class="fixed inset-0 hidden flex items-center justify-center p-4 opacity-0">
+        <div class="bg-white w-full max-w-lg overflow-hidden relative">
+            <!-- Close Button -->
+            <button onclick="closePostViewer()" class="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full backdrop-blur-md transition">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <!-- Loading State -->
+            <div id="viewer-loading" class="p-12 flex flex-col items-center justify-center text-center">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-600 mb-4"></div>
+                <p class="text-slate-500 font-medium">Menyiapkan masakan...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="viewer-error" class="hidden p-12 flex flex-col items-center justify-center text-center">
+                <div class="bg-red-100 p-4 rounded-full text-red-500 mb-4">
+                    <i data-lucide="alert-circle" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 mb-2">Resep Tidak Ditemukan</h3>
+                <p class="text-slate-500 mb-2">Mungkin postingan ini sudah dihapus atau linknya salah.</p>
+                <!-- Debug Error Message -->
+                <p id="error-details" class="text-xs text-red-400 font-mono bg-red-50 p-2 rounded border border-red-100 max-w-xs mx-auto break-all"></p>
+                <button onclick="closePostViewer()" class="text-orange-600 font-bold hover:underline mt-4">Kembali ke Beranda</button>
+            </div>
+
+            <!-- Content State -->
+            <div id="viewer-content" class="hidden">
+                <!-- User Header -->
+                <div class="p-4 flex items-center gap-3 border-b border-slate-100">
+                    <div class="relative w-10 h-10 shrink-0">
+                        <img id="post-avatar" src="" 
+                             onerror="this.style.display='none'; document.getElementById('avatar-fallback').style.display='flex';"
+                             onload="this.style.display='block'; document.getElementById('avatar-fallback').style.display='none';"
+                             class="w-full h-full rounded-full bg-slate-200 object-cover absolute inset-0 z-10 transition-opacity duration-300"
+                             alt="User Avatar">
+                        
+                        <!-- Fallback Avatar: Inisial dengan Background Orange -->
+                        <div id="avatar-fallback" 
+                             class="w-full h-full rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-sm absolute inset-0 z-0 border border-orange-600 select-none" style="display: none;">
+                             U
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 id="post-author" class="font-bold text-slate-900 leading-tight">User Name</h4>
+                        <p id="post-time" class="text-xs text-slate-500">Baru saja</p>
+                    </div>
+                </div>
+
+                <!-- Media Carousel Container -->
+                <div id="media-carousel" class="bg-slate-100 relative aspect-square overflow-hidden">
+                    
+                    <!-- Media Slides Container -->
+                    <div id="media-slides" class="w-full h-full flex transition-transform duration-300 ease-in-out">
+                        <!-- Slides (img/video) akan di-inject oleh JavaScript -->
+                    </div>
+
+                    <!-- Navigation Buttons -->
+                    <button id="prev-media" onclick="navigateMedia(-1)" class="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full hidden z-20 transition">
+                        <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                    </button>
+                    <button id="next-media" onclick="navigateMedia(1)" class="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full hidden z-20 transition">
+                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                    </button>
+
+                    <!-- Slide Indicator (Dots) -->
+                    <div id="slide-indicators" class="absolute bottom-3 left-0 right-0 flex justify-center gap-2 z-20">
+                        <!-- Indicators akan di-inject oleh JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Action Bar (Dummy) -->
+                <div class="px-4 py-3 flex items-center gap-4 text-slate-600 border-b border-slate-50">
+                    <i data-lucide="heart" class="w-6 h-6 hover:text-red-500 cursor-pointer transition"></i>
+                    <i data-lucide="message-circle" class="w-6 h-6 hover:text-blue-500 cursor-pointer transition"></i>
+                    <i data-lucide="send" class="w-6 h-6 ml-auto hover:text-green-500 cursor-pointer transition"></i>
+                </div>
+
+                <!-- Caption & Details -->
+                <div class="p-5">
+                    <p id="post-caption" class="text-slate-800 leading-relaxed mb-4 whitespace-pre-wrap text-sm"></p>
+                    
+                    <!-- Tombol Download/Buka App di Post Viewer -->
+                    <div class="bg-orange-50 rounded-xl p-4 flex items-center justify-between border border-orange-100">
+                        <div>
+                            <p class="text-xs text-orange-800 font-bold uppercase tracking-wider mb-1">Ingin masak ini?</p>
+                            <p class="text-sm text-slate-700">Dapatkan resep lengkap & langkah memasaknya di aplikasi.</p>
+                        </div>
+                        
+                        <!-- UPDATE: Ditambah ID "cta-button-viewer" biar bisa dimanipulasi JS -->
+                        <button id="cta-button-viewer" onclick="openReleaseModal()" class="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-orange-200 hover:bg-orange-700 transition">
+                            <i data-lucide="play" class="w-4 h-4 fill-current"></i> 
+                            Get it on
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-pattern">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                
+                <!-- Kiri: Copywriting -->
+                <div class="text-center lg:text-left relative z-10">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-100 border border-orange-200 text-orange-800 text-sm font-bold mb-8 animate-fade-in-up">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        Powered by Artificial Intelligence
+                    </div>
+                    <h1 class="text-5xl lg:text-7xl font-extrabold leading-tight mb-6 text-slate-900">
+                        Masak Apa Hari Ini? <br>
+                        <span class="gradient-text">Tanya Chef AI Aja!</span>
+                    </h1>
+                    <p class="text-lg text-slate-600 mb-10 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                        Bingung mau masak apa dengan bahan di kulkas? ChefGenius solusinya. Scan bahannya, dapatkan resepnya, dan bagikan kreasimu di komunitas <b>Inzara</b>.
+                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                        <button onclick="openReleaseModal()" class="flex items-center justify-center gap-3 bg-orange-600 text-white px-8 py-4 rounded-2xl hover:bg-orange-700 transition shadow-xl shadow-orange-200 font-bold text-lg group">
+                            <i data-lucide="download" class="w-5 h-5 group-hover:animate-bounce"></i>
+                            Download Sekarang
+                        </button>
+                        <a href="#ai-features" class="flex items-center justify-center gap-2 px-8 py-4 rounded-2xl border-2 border-slate-200 hover:border-orange-200 hover:bg-orange-50 transition font-bold text-slate-700">
+                            Lihat Fitur
+                        </a>
+                    </div>
+
+                    <div class="mt-12 flex items-center justify-center lg:justify-start gap-6 text-slate-400 text-sm font-medium">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="check-circle-2" class="text-green-500 w-5 h-5"></i> Gratis
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="check-circle-2" class="text-green-500 w-5 h-5"></i> Android
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="check-circle-2" class="text-green-500 w-5 h-5"></i> Aman
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kanan: Mockup INTERAKTIF -->
+                <div class="relative mx-auto lg:mr-0 w-full max-w-md">
+                    <!-- Background Blob -->
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-orange-300 to-yellow-200 rounded-full blur-3xl opacity-30 -z-10"></div>
+                    
+                    <!-- Phone Frame (CSS Class dari style.css) -->
+                    <div class="phone-frame relative mx-auto aspect-[9/19]">
+                        <!-- Mockup Header -->
+                        <div class="bg-[#121212] p-4 flex justify-between items-center border-b border-gray-800 sticky top-0 z-20 text-white">
+                            <span class="font-bold text-xl">Chef AI</span>
+                            <button onclick="openReleaseModal()" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 transition"><i data-lucide="help-circle" class="w-5 h-5 text-gray-400"></i></button>
+                        </div>
+                        
+                        <!-- Mockup Content -->
+                        <div class="p-4 space-y-6 overflow-y-auto h-[calc(100%-80px)] pb-20 no-scrollbar bg-[#121212]">
+                            
+                            <!-- 1. PROMPT INPUT -->
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-2 text-white justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="sparkles" class="w-4 h-4 text-orange-500"></i>
+                                        <span class="text-sm font-semibold">Ide Resep untuk Chef Cei:</span>
+                                    </div>
+                                    <button onclick="openReleaseModal()" class="text-gray-400 hover:text-orange-400 transition"><i data-lucide="info" class="w-4 h-4"></i></button>
+                                </div>
+                                <div class="flutter-input-border rounded-xl bg-gray-800 p-3 h-28 text-gray-400 text-sm leading-relaxed cursor-text">
+                                    Tuliskan bahan atau ide resep yang kamu punya, Chef Cei akan meraciknya! (Contoh: Ayam, Telur, Bawang, Diet Keto)
+                                </div>
+                                
+                                <div class="mt-2">
+                                    <div class="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-gray-700 bg-gray-800 text-xs font-semibold text-gray-400">
+                                        <i data-lucide="lock" class="w-4 h-4 text-gray-500"></i>
+                                        Diet Filter Locked (Lv 5)
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. PERSONA SELECTOR -->
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-2 text-white">
+                                    <i data-lucide="user-cog" class="w-4 h-4 text-orange-500"></i>
+                                    <span class="text-sm font-semibold">Pilih Gaya Chef:</span>
+                                </div>
+                                <div class="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+                                    <div class="flex-shrink-0 w-24 p-3 bg-orange-500/10 border-2 border-orange-500 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer relative">
+                                        <div class="w-10 h-10 rounded-full flex items-center justify-center">
+                                            <i data-lucide="chef-hat" class="w-8 h-8 text-orange-600 fill-current"></i>
+                                        </div>
+                                        <span class="text-[11px] text-orange-500 font-bold text-center">Chef Standar</span>
+                                        <div class="absolute top-2 right-2 p-1 rounded-full bg-orange-600">
+                                             <i data-lucide="check" class="w-3 h-3 text-white"></i>
+                                        </div>
+                                    </div>
+                                    <!-- Locked Persona -->
+                                    <div class="flex-shrink-0 w-24 p-3 bg-gray-800 border border-gray-700 rounded-xl flex flex-col items-center justify-center gap-2 opacity-50 relative">
+                                        <div class="w-10 h-10 rounded-full flex items-center justify-center">
+                                            <i data-lucide="lock" class="w-6 h-6 text-gray-500"></i>
+                                        </div>
+                                        <span class="text-[11px] text-gray-400 font-medium text-center">Nenek Penyayang</span>
+                                        <span class="text-[9px] text-red-400 font-bold">Lv. 5</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 3. RECIPE SETTINGS -->
+                            <div class="space-y-4">
+                                <div class="space-y-3">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="globe" class="w-4 h-4 text-orange-500"></i>
+                                        <span class="text-sm font-semibold text-white">Negara:</span>
+                                        <span class="text-[10px] bg-gray-700 text-gray-400 px-2 py-0.5 rounded-full font-bold ml-1">Lv. 2</span>
+                                    </div>
+                                    <div class="opacity-50 pointer-events-none relative">
+                                        <select class="flutter-input-border w-full bg-gray-800 text-gray-400 px-4 py-3.5 rounded-xl text-sm appearance-none">
+                                            <option value="Any">Bebas (Lv. 2 Required)</option>
+                                        </select>
+                                        <i data-lucide="chevron-down" class="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"></i>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="list-ordered" class="w-4 h-4 text-orange-500"></i>
+                                        <span class="text-sm font-semibold text-white">Jumlah Resep:</span>
+                                    </div>
+                                    <div class="segmented-button flex w-full justify-between space-x-2 text-gray-400">
+                                        <!-- Radio 1 -->
+                                        <input type="radio" id="count-1" name="recipe-count" value="1" checked class="hidden">
+                                        <label for="count-1" class="flex-1 p-2.5 text-xs">
+                                            <span class="text-sm font-bold block">1</span>
+                                            Resep Utama
+                                        </label>
+
+                                        <!-- Radio Locked -->
+                                        <div class="flex-1 p-2.5 text-xs bg-gray-800 opacity-50 rounded-lg text-center cursor-not-allowed border border-gray-700">
+                                            <i data-lucide="lock" class="w-4 h-4 mx-auto block mb-1"></i>
+                                            <span class="text-[10px] font-bold block text-red-400">Lv. 5</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. INFO BOX -->
+                            <div class="p-4 rounded-xl bg-orange-900/20 border border-orange-800/50 text-white space-y-2 text-sm">
+                                <p class="font-bold text-orange-400">Info Penting (Harap Dibaca!)</p>
+                                <ul class="list-disc list-inside text-gray-300 text-xs space-y-1">
+                                    <li>
+                                        <span class="font-semibold text-orange-200">Upgrade Baru (Nutrisi): </span>
+                                        Chef Cei sekarang akan otomatis menghitung estimasi Kalori & Nutrisi.
+                                    </li>
+                                    <li>
+                                        <span class="font-semibold text-orange-200">Info Kuota: </span>
+                                        Mau minta 1 atau 10 resep, kuota AI yang kepake SAMA AJA.
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <!-- 5. GENERATE BUTTON -->
+                            <div class="mt-8">
+                                <button onclick="openReleaseModal()" class="w-full bg-orange-600 hover:bg-orange-700 text-white py-4 rounded-xl font-bold text-base shadow-lg shadow-orange-900/20 flex items-center justify-center gap-3 transition active:scale-[0.98]">
+                                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                                    Buat Resep
+                                </button>
+                            </div>
+
+                        </div>
+
+                        <!-- Mockup Bottom Nav -->
+                        <div class="absolute bottom-0 w-full bg-[#121212] border-t border-gray-800 p-3 flex justify-around items-center text-gray-500 z-20 pb-5">
+                            <div class="flex flex-col items-center gap-1">
+                                <i data-lucide="archive" class="w-5 h-5"></i>
+                                <span class="text-[10px]">Pantry</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <i data-lucide="users" class="w-5 h-5"></i>
+                                <span class="text-[10px]">Inzara</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1 text-orange-500">
+                                <div class="bg-orange-600/20 p-1.5 rounded-full">
+                                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                                </div>
+                                <span class="text-[10px] font-bold">Chef AI</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1">
+                                <i data-lucide="user" class="w-5 h-5"></i>
+                                <span class="text-[10px]">Profil</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section id="ai-features" class="py-24 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <span class="text-orange-600 font-bold tracking-wider uppercase text-sm">Fitur Unggulan</span>
+                <h2 class="text-3xl md:text-4xl font-extrabold mt-3 text-slate-900">Lebih Dari Sekadar <br>Buku Resep Biasa</h2>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- AI Recipe -->
+                <div class="group p-8 rounded-3xl bg-slate-50 hover:bg-orange-50 transition duration-300 border border-slate-100 hover:border-orange-100">
+                    <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-6 text-orange-600 group-hover:scale-110 transition duration-300">
+                        <i data-lucide="bot" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-slate-900">AI Recipe Generator</h3>
+                    <p class="text-slate-600 leading-relaxed">Punya bahan sisa? Ketik atau foto bahannya, AI kami akan membuatkan resep unik khusus untukmu dalam hitungan detik.</p>
+                </div>
+
+                <!-- Shopping List -->
+                <div class="group p-8 rounded-3xl bg-slate-50 hover:bg-blue-50 transition duration-300 border border-slate-100 hover:border-blue-100">
+                    <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-6 text-blue-600 group-hover:scale-110 transition duration-300">
+                        <i data-lucide="list-todo" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-slate-900">Smart Shopping List</h3>
+                    <p class="text-slate-600 leading-relaxed">Suka sebuah resep? Masukkan bahannya ke daftar belanja dengan satu klik. Catatan pribadi biar belanja gak ada yang kelupaan.</p>
+                </div>
+
+                <!-- Cooking Mode -->
+                <div class="group p-8 rounded-3xl bg-slate-50 hover:bg-green-50 transition duration-300 border border-slate-100 hover:border-green-100">
+                    <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-6 text-green-600 group-hover:scale-110 transition duration-300">
+                        <i data-lucide="smartphone" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-slate-900">Step-by-Step Mode</h3>
+                    <p class="text-slate-600 leading-relaxed">Tampilan khusus saat memasak. Layar HP gak bakal mati, instruksi jelas, dan navigasi suara biar tangan kotor gak perlu nyentuh HP.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- INZARA Community Section -->
+    <section id="inzara" class="py-24 bg-slate-900 text-white relative overflow-hidden">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="flex flex-col lg:flex-row items-center gap-16">
+                <div class="lg:w-1/2">
+                    <div class="inline-block px-3 py-1 rounded-full bg-orange-600 text-xs font-bold mb-6">FITUR SOSIAL</div>
+                    <h2 class="text-4xl md:text-5xl font-extrabold mb-6">Gabung di <span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-400">Inzara</span></h2>
+                    <p class="text-slate-400 text-lg mb-8 leading-relaxed">
+                        Inzara adalah rumah bagi para pecinta kuliner. Bukan cuma liat resep, di sini kamu bisa jadi influencer kuliner!
+                    </p>
+                    
+                    <ul class="space-y-6">
+                        <li class="flex items-start gap-4">
+                            <div class="bg-slate-800 p-3 rounded-xl text-orange-400"><i data-lucide="share-2" class="w-6 h-6"></i></div>
+                            <div>
+                                <h4 class="font-bold text-xl">Share & Eksis</h4>
+                                <p class="text-slate-400 text-sm">Upload foto masakanmu, tulis caption, dan dapatkan likes dari komunitas secara realtime.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-4">
+                            <div class="bg-slate-800 p-3 rounded-xl text-orange-400"><i data-lucide="bell-ring" class="w-6 h-6"></i></div>
+                            <div>
+                                <h4 class="font-bold text-xl">Notifikasi Interaktif</h4>
+                                <p class="text-slate-400 text-sm">Dapet notifikasi langsung pas ada yang like, komen, atau simpan resepmu.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-4">
+                            <div class="bg-slate-800 p-3 rounded-xl text-orange-400"><i data-lucide="user-check" class="w-6 h-6"></i></div>
+                            <div>
+                                <h4 class="font-bold text-xl">Bangun Profilmu</h4>
+                                <p class="text-slate-400 text-sm">Lengkapi bio, avatar, dan kumpulkan like. Jadilah koki top di Inzara!</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Community Preview Cards -->
+                <div class="lg:w-1/2 relative">
+                    <div class="absolute -top-10 -left-10 w-32 h-32 bg-orange-500 rounded-full blur-[80px] opacity-40"></div>
+                    <div class="grid gap-6">
+                        <!-- Post Card 1 -->
+                        <div class="bg-gray-800 text-white p-4 rounded-2xl shadow-xl transform rotate-2 hover:rotate-0 transition duration-300 border border-gray-700">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
+                                    <img src="/assets/images/emoji/nyapa.png" onerror="this.onerror=null;this.src='https://placehold.co/40x40/4b5563/ffffff?text=U'" alt="User">
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-sm">Chef Genius</h5>
+                                    <p class="text-xs text-gray-400">Baru saja</p>
+                                </div>
+                                <div class="ml-auto text-gray-400"><i data-lucide="more-horizontal" class="w-5 h-5"></i></div>
+                            </div>
+                            <img src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" onerror="this.onerror=null;this.src='https://placehold.co/600x400/374151/ffffff?text=Post+Image'" class="w-full h-48 object-cover rounded-xl mb-3">
+                            <div class="flex items-center gap-4 text-gray-300 text-sm pt-1">
+                                <span class="flex items-center gap-1 text-red-500"><i data-lucide="heart" class="w-5 h-5 fill-current"></i> 245</span>
+                                <span class="flex items-center gap-1"><i data-lucide="message-circle" class="w-5 h-5"></i> 42</span>
+                                <span class="flex items-center gap-1"><i data-lucide="send" class="w-5 h-5"></i> 15</span>
+                                <span class="flex items-center gap-1 ml-auto text-orange-500"><i data-lucide="bookmark" class="w-5 h-5 fill-current"></i></span>
+                            </div>
+                            <p class="text-sm font-medium mt-3 leading-relaxed">Akhirnya berhasil bikin Fruit Cake yang lembut! 🍰 <span class="text-blue-400">#ChefGenius</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Safety & Trust Section -->
+    <section id="safety" class="py-24 bg-white border-b border-slate-200">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <h2 class="text-3xl font-bold mb-12">Komunitas yang <span class="text-orange-600">Aman & Nyaman</span></h2>
+            
+            <div class="grid md:grid-cols-2 gap-8 text-left">
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="bg-red-100 p-2 rounded-lg text-red-600"><i data-lucide="shield-alert" class="w-6 h-6"></i></div>
+                        <h3 class="font-bold text-lg">Sistem Pelaporan</h3>
+                    </div>
+                    <p class="text-slate-600 text-sm">Melihat konten negatif? Laporkan dengan mudah. Admin kami memantau laporan demi menjaga komunitas tetap positif.</p>
+                </div>
+
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="bg-blue-100 p-2 rounded-lg text-blue-600"><i data-lucide="scale" class="w-6 h-6"></i></div>
+                        <h3 class="font-bold text-lg">Hak Banding Transparan</h3>
+                    </div>
+                    <p class="text-slate-600 text-sm">Akun terkena sanksi tidak sengaja? Tenang, kamu bisa mengajukan banding langsung dari aplikasi dan memantau statusnya.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download CTA -->
+    <section id="download" class="py-24 bg-slate-900 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-orange-500 rounded-full blur-[100px] opacity-20"></div>
+        <div class="absolute bottom-0 left-0 w-64 h-64 bg-blue-500 rounded-full blur-[100px] opacity-20"></div>
+
+        <div class="max-w-5xl mx-auto px-4 text-center relative z-10">
+            <h2 class="text-4xl md:text-6xl font-extrabold text-white mb-8">
+                Mulai Petualangan Rasamu.
+            </h2>
+            <p class="text-slate-300 text-lg mb-12 max-w-2xl mx-auto">
+                Bergabunglah dengan ribuan Chef Genius lainnya. Download sekarang, gratis selamanya untuk fitur dasar.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row justify-center gap-6">
+                <button onclick="openReleaseModal()" class="flex items-center gap-4 bg-orange-600 hover:bg-orange-700 text-white px-8 py-4 rounded-xl transition duration-300 shadow-xl shadow-orange-900/20 group">
+                    <i data-lucide="play" class="w-8 h-8 fill-current"></i>
+                    <div class="text-left">
+                        <div class="text-xs uppercase font-semibold tracking-wide text-orange-200">GET IT ON</div>
+                        <div class="text-xl font-bold font-sans">Google Play</div>
+                    </div>
+                </button>
+            </div>
+            
+            <div class="mt-12 pt-8 border-t border-slate-800 flex flex-wrap justify-center gap-8 text-slate-500 text-sm font-medium">
+                <span>Versi 1.0.0</span>
+                <span>•</span>
+                <span>Android 8.0+</span>
+                <span>•</span>
+                <span>Size: 45MB</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="flex items-center gap-3">
+                    <img src="/assets/images/icon_chefgenius.png" onerror="this.onerror=null;this.src='https://placehold.co/32x32/ea580c/ffffff?text=CG'" alt="ChefGenius Logo" class="w-8 h-8 object-contain">
+                    <span class="font-bold text-xl text-slate-900">ChefGenius</span>
+                </div>
+                <div class="flex gap-8 text-sm text-slate-500 font-medium">
+                    <!-- Update Link Footer untuk membuka Modal -->
+                    <button onclick="openPrivacyModal()" class="hover:text-orange-600 transition text-left">Kebijakan Privasi</button>
+                    <button onclick="openTermsModal()" class="hover:text-orange-600 transition text-left">Syarat & Ketentuan</button>
+                    <a href="#" onclick="window.open('https://wa.me/6287845245720')" class="hover:text-orange-600 transition">Kontak Developer</a>
+                </div>
+                <p class="text-slate-400 text-sm">© 2025 Ince Iqbal Aulia Salam.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPT GABUNGAN -->
+    <script>
+        // --- GLOBALS untuk Carousel/Video ---
+        let currentSlideIndex = 0;
+        let postMediaData = []; 
+        let supabaseClient = null; 
+
+        // --- KONFIGURASI SUPABASE ---
+        const SUPABASE_URL = 'https://zfiyfhmsuhitytsuioml.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpmaXlmaG1zdWhpdHl0c3Vpb21sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2OTkyNTUsImV4cCI6MjA3NjI3NTI1NX0.I5eCXPHcFX_fm9slskHTY01XOs8a8GyorHg3nrV7Itg';
+
+        // --- FUNGSI INIT SUPABASE YANG AMAN ---
+        function initSupabase() {
+            if (supabaseClient) return supabaseClient;
+            
+            if (typeof supabase !== 'undefined') {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                return supabaseClient;
+            } else {
+                console.error("Library Supabase belum dimuat!");
+                return null;
+            }
+        }
+
+        // --- NEW FUNCTION: AMBIL DAN RENDER POST DATA ---
+        async function loadPostData(postId) {
+            try {
+                console.log("Mulai mengambil data post:", postId);
+                const sb = initSupabase();
+                
+                if (!sb) {
+                    throw new Error("Gagal koneksi ke database (Library Error). Coba refresh.");
+                }
+                
+                // 1. Ambil Postingan
+                const { data: post, error: postError } = await sb
+                    .from('posts')
+                    .select(`
+                        id, caption, created_at, user_id,
+                        post_media ( url, type )
+                    `)
+                    .eq('id', postId)
+                    .maybeSingle();
+
+                if (postError) throw postError;
+                if (!post) throw new Error("Postingan tidak ditemukan di database.");
+
+                // 2. Ambil Profile User
+                let userProfile = { username: 'Chef Genius User', avatar_url: null };
+                
+                if (post.user_id) {
+                    const { data: profile } = await sb
+                        .from('profiles')
+                        .select('username, avatar_url')
+                        .eq('id', post.user_id)
+                        .single();
+                    
+                    if (profile) {
+                        userProfile = profile;
+                    }
+                }
+
+                // 3. Render Data
+                const fullPostData = {
+                    ...post,
+                    profiles: userProfile
+                };
+
+                renderPost(fullPostData);
+
+            } catch (e) {
+                console.error("Gagal ambil postingan:", e);
+                showErrorState(e.message || "Gagal memuat data");
+            }
+        }
+
+        // --- NEW FUNCTION: ATTEMPT DEEP LINKING (JURUS PAKSA V3 - TOMBOL SAKTI) ---
+        function attemptDeepLink(postId) {
+            console.log("Mencoba Deep Link ke ID:", postId);
+            
+            // 1. Coba buka aplikasi mobile via window location (Otomatis pas load)
+            const deepLinkUrl = `chefgenius://post/${postId}`;
+            
+            // Coba redirect normal dulu
+            try {
+                window.location.href = deepLinkUrl;
+            } catch (e) {
+                console.log("Redirect app error:", e);
+            }
+
+            // 2. Fallback ke Web Viewer jika App tidak terbuka
+            // Kita set waktu agak cepat dikit biar user gak nunggu lama
+            const fallbackTimeout = 1500; 
+
+            setTimeout(() => {
+                console.log("Timeout Deep Link. MENAMPILKAN POPUP WEB.");
+                
+                const viewer = document.getElementById('post-viewer');
+                const loading = document.getElementById('viewer-loading');
+                const content = document.getElementById('viewer-content');
+                const errorDiv = document.getElementById('viewer-error');
+
+                if (!viewer) return;
+
+                // Reset state viewer
+                loading.classList.remove('hidden');
+                content.classList.add('hidden');
+                errorDiv.classList.add('hidden');
+
+                // Tampilkan Modal
+                viewer.classList.remove('hidden', 'opacity-0');
+                
+                // --- LOGIKA TOMBOL SAKTI (SATU TOMBOL DUA KONDISI) ---
+                const ctaButton = document.getElementById('cta-button-viewer');
+                if (ctaButton) {
+                    // STEP 1: Ubah tampilan jadi "Buka di Aplikasi" (Asumsi user punya app tapi keblokir)
+                    ctaButton.innerHTML = `<i data-lucide="smartphone" class="w-4 h-4"></i> Buka di Aplikasi`;
+                    // Update style biar lebih mencolok
+                    ctaButton.className = "flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-orange-200 hover:bg-orange-700 transition";
+                    
+                    // STEP 2: Pas tombol diklik, jalankan logika ganda
+                    ctaButton.onclick = function(e) {
+                        e.preventDefault();
+                        
+                        // KONDISI 1: Coba Buka App (Lagi)
+                        const start = Date.now();
+                        window.location.href = deepLinkUrl;
+
+                        // KONDISI 2: Kalau gagal (waktu jalan terus karena gak pindah app), lempar ke Play Store
+                        // Browser modern akan men-suspend timer JS kalau pindah app.
+                        // Jadi kalau timer ini tereksekusi sesuai jadwal (selisih waktu dikit), berarti user GAK pindah app.
+                        setTimeout(() => {
+                            const end = Date.now();
+                            // Kalau selisih waktu kurang dari 2.5 detik (toleransi delay dikit), 
+                            // berarti user masih di halaman ini -> Gak punya app -> Buka Play Store
+                            if (!document.hidden && (end - start < 2500)) { 
+                                console.log("Gagal buka app, redirect ke Play Store...");
+                                // Ganti URL ini dengan link Play Store aslimu
+                                window.location.href = 'https://play.google.com/store/apps/details?id=com.chefgenius'; 
+                            }
+                        }, 2000);
+                    };
+                }
+
+                // Load data postingan ke viewer
+                loadPostData(postId);
+                
+                // Re-init icon buat tombol baru
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                
+            }, fallbackTimeout);
+        }
+
+        // --- FUNGSI CAROUSEL & VIDEO CONTROL ---
+        function navigateMedia(direction) {
+            const slidesContainer = document.getElementById('media-slides');
+            const totalSlides = postMediaData.length;
+
+            const currentSlide = slidesContainer.children[currentSlideIndex];
+            const currentVideo = currentSlide ? currentSlide.querySelector('video') : null;
+            if (currentVideo) {
+                currentVideo.pause();
+            }
+
+            currentSlideIndex += direction;
+
+            if (currentSlideIndex < 0) {
+                currentSlideIndex = totalSlides - 1;
+            } else if (currentSlideIndex >= totalSlides) {
+                currentSlideIndex = 0;
+            }
+
+            updateMediaViewer();
+        }
+
+        function updateMediaViewer() {
+            const slidesContainer = document.getElementById('media-slides');
+            const totalSlides = postMediaData.length;
+            const indicatorContainer = document.getElementById('slide-indicators');
+            const prevButton = document.getElementById('prev-media');
+            const nextButton = document.getElementById('next-media');
+
+            slidesContainer.style.transform = `translateX(-${currentSlideIndex * 100 / totalSlides}%)`;
+
+            indicatorContainer.innerHTML = '';
+            if (totalSlides > 1) {
+                for (let i = 0; i < totalSlides; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = `w-2 h-2 rounded-full ${i === currentSlideIndex ? 'bg-orange-500' : 'bg-white/50'} transition-colors cursor-pointer`;
+                    dot.onclick = () => {
+                        currentSlideIndex = i;
+                        updateMediaViewer();
+                    };
+                    indicatorContainer.appendChild(dot);
+                }
+            }
+
+            if (totalSlides > 1) {
+                prevButton.classList.remove('hidden');
+                nextButton.classList.remove('hidden');
+            } else {
+                prevButton.classList.add('hidden');
+                nextButton.classList.add('hidden');
+            }
+        }
+
+        // --- FUNGSI RENDER UTAMA ---
+        function renderPost(post) {
+            document.getElementById('viewer-loading').classList.add('hidden');
+            document.getElementById('viewer-content').classList.remove('hidden');
+
+            currentSlideIndex = 0;
+            postMediaData = post.post_media || [];
+
+            const userName = post.profiles?.username || 'Chef Genius User';
+            
+            document.getElementById('post-author').textContent = userName;
+            
+            const imgEl = document.getElementById('post-avatar');
+            const fallbackEl = document.getElementById('avatar-fallback');
+            
+            if (post.profiles?.avatar_url) {
+                imgEl.src = post.profiles.avatar_url;
+                imgEl.style.display = 'block';
+                fallbackEl.style.display = 'none';
+            } else {
+                imgEl.style.display = 'none';
+                fallbackEl.textContent = userName.charAt(0).toUpperCase();
+                fallbackEl.style.display = 'flex';
+            }
+
+            const slidesContainer = document.getElementById('media-slides');
+            slidesContainer.innerHTML = ''; 
+
+            if (postMediaData.length > 0) {
+                postMediaData.forEach(media => {
+                    const slide = document.createElement('div');
+                    slide.className = 'flex-shrink-0 w-full h-full relative'; 
+
+                    if (media.type === 'video') {
+                        const videoEl = document.createElement('video');
+                        videoEl.src = media.url;
+                        videoEl.controls = true;
+                        videoEl.className = 'w-full h-full object-cover';
+                        videoEl.poster = media.poster_url || 'https://placehold.co/500x500/f59e0b/ffffff?text=Play+Video';
+                        slide.appendChild(videoEl);
+                    } else {
+                        const imgEl = document.createElement('img');
+                        imgEl.src = media.url;
+                        imgEl.className = 'w-full h-full object-cover';
+                        imgEl.onerror = function() {
+                            this.src = 'https://placehold.co/500x500/f59e0b/ffffff?text=Image+Error';
+                        };
+                        slide.appendChild(imgEl);
+                    }
+                    slidesContainer.appendChild(slide);
+                });
+                slidesContainer.style.width = `${postMediaData.length * 100}%`;
+            } else {
+                const slide = document.createElement('div');
+                slide.className = 'flex-shrink-0 w-full h-full relative';
+                slide.innerHTML = `<img src="https://placehold.co/500x500/f59e0b/ffffff?text=No+Media" class="w-full h-full object-cover">`;
+                slidesContainer.appendChild(slide);
+                slidesContainer.style.width = `100%`;
+            }
+            
+            updateMediaViewer();
+            document.getElementById('post-caption').textContent = post.caption || '';
+            
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        function showErrorState(message) {
+            document.getElementById('viewer-loading').classList.add('hidden');
+            document.getElementById('viewer-error').classList.remove('hidden');
+            const details = document.getElementById('error-details');
+            if (details) details.textContent = "Error: " + message;
+        }
+
+        function closePostViewer() {
+            const viewer = document.getElementById('post-viewer');
+            const activeVideo = viewer.querySelector('video');
+            if (activeVideo) activeVideo.pause();
+            
+            viewer.style.opacity = '0';
+            setTimeout(() => {
+                viewer.style.display = 'none';
+                viewer.classList.add('hidden');
+                if (window.location.pathname.startsWith('/post/')) {
+                    history.pushState(null, "", "/"); 
+                }
+            }, 300);
+        }
+
+        // --- FUNGSI MODAL RELEASE ---
+        function openReleaseModal() {
+            const modal = document.getElementById('release-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('div').classList.remove('scale-95');
+                modal.querySelector('div').classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeReleaseModal() {
+            const modal = document.getElementById('release-modal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.add('scale-95');
+            modal.querySelector('div').classList.remove('scale-100');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // --- FUNGSI MODAL TERMS & PRIVACY (NEW) ---
+        function openTermsModal() {
+            const modal = document.getElementById('terms-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('div').classList.remove('scale-95');
+                modal.querySelector('div').classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeTermsModal() {
+            const modal = document.getElementById('terms-modal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.add('scale-95');
+            modal.querySelector('div').classList.remove('scale-100');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function openPrivacyModal() {
+            const modal = document.getElementById('privacy-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('div').classList.remove('scale-95');
+                modal.querySelector('div').classList.add('scale-100');
+            }, 10);
+        }
+
+        function closePrivacyModal() {
+            const modal = document.getElementById('privacy-modal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.add('scale-95');
+            modal.querySelector('div').classList.remove('scale-100');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // --- INIT LOGIC (WINDOW LOAD) ---
+        window.addEventListener('load', () => {
+            console.log("ChefGenius Fully Loaded..."); 
+            
+            // Init Lucide aman
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            
+            const path = window.location.pathname;
+            
+            // Cek URL Postingan (Untuk Real Server)
+            if (path.startsWith('/post/')) {
+                let postId = path.split('/post/')[1];
+                if (postId && postId.includes('/')) {
+                    postId = postId.split('/')[0];
+                }
+                
+                if (postId) {
+                    attemptDeepLink(postId);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

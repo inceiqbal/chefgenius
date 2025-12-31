@@ -1,0 +1,36 @@
+--- IGNORE LIST UPDATE (FINAL) ---
+
+File ini nyuruh Vercel buat CUEKIN folder/file berat di bawah ini.
+
+Biar yang di-upload cuma folder "Web" doang.
+
+1. Folder Mobile (Flutter) - SUPER BERAT
+
+Mobile/
+mobile/
+
+2. Aset & Dataset Gede (Biang Kerok 13k file)
+
+Food Images/
+*.csv
+*.py
+
+3. System & Config Files
+
+.git/
+.github/
+.idea/
+.vscode/
+.env
+.env.local
+
+4. Node Modules (Jaga-jaga)
+
+node_modules/
+
+5. Sampah OS
+
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log

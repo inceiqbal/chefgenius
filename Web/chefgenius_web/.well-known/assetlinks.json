@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.chefgenius.app",
+      "sha256_cert_fingerprints": [
+        "2E:0D:36:8C:BF:A9:D2:75:B6:68:B6:54:CF:C1:45:F9:F9:A4:74:5A:06:2A:94:39:37:FB:AC:5A:4B:AF:71:5D"
+      ]
+    }
+  }
+]
