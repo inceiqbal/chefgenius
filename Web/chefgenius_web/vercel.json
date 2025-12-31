@@ -1,11 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/.well-known/:path*",
-      "destination": "/.well-known/:path*"
-    },
-    {
-      "source": "/(.*)",
+      "source": "/((?!.well-known).*)",
       "destination": "/index.html"
     }
   ]
