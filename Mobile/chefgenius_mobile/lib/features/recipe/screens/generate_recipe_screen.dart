@@ -126,10 +126,10 @@ class _GenerateRecipeScreenState extends State<GenerateRecipeScreen> {
     
     List<GlobalKey> keys = [
       _promptKey,
+      _buttonKey,      // Button sekarang di sini (setelah prompt)
       if (!isOffline) _personaKey, // Skip persona kalau offline
       _cuisineKey,
       _optionsKey,
-      _buttonKey,
     ];
 
     ShowCaseWidget.of(ctx).startShowCase(keys);
@@ -222,73 +222,9 @@ class _GenerateRecipeScreenState extends State<GenerateRecipeScreen> {
     return "User has strict diet: $diets. IF the user request conflicts with this (e.g. 'Chicken' but diet is 'Vegan'), YOU MUST SUBSTITUTE the ingredient. AND in the 'description', you MUST explain: 'Replacing [original] with [substitute] because [reason]'.";
   }
 
-  // Conservative halal validator
-  // Returns: 'Halal', 'Non-Halal (Detected)', or 'Unknown'
-  String _validateHalalConservative(Map<String, dynamic> item) {
-    try {
-      final List<String> tokens = [];
+  // Halal validation sekarang dilakukan di HalalValidator utility
+  // Lihat: lib/app/data/utils/halal_validator.dart
 
-      void addToken(dynamic v) {
-        if (v == null) return;
-        if (v is String) {
-          tokens.add(v.toLowerCase());
-        } else if (v is List) {
-          for (var e in v) {
-            if (e == null) continue;
-            tokens.add(e.toString().toLowerCase());
-          }
-        } else if (v is Map) {
-          // If ingredient object, try name field(s)
-          if (v.containsKey('name')) {
-            tokens.add(v['name'].toString().toLowerCase());
-          } else {
-            for (var val in v.values) {
-              if (val != null) tokens.add(val.toString().toLowerCase());
-            }
-          }
-        } else {
-          tokens.add(v.toString().toLowerCase());
-        }
-      }
-
-      addToken(item['title']);
-      addToken(item['description']);
-      addToken(item['main_ingredients']);
-      addToken(item['steps']);
-      addToken(item['all_ingredients']);
-
-      final content = tokens.join(' ');
-
-      // Keywords that confidently indicate non-halal
-      final nonHalal = [
-        'pork', 'babi', 'bacon', 'ham', 'lard', 'pancetta', 'salami', 'porchetta', 'blood', 'blood sausage',
-        'alcohol', 'wine', 'beer', 'vodka', 'whiskey', 'rum', 'brandy', 'sake', 'soju', 'tequila'
-      ];
-
-      for (var k in nonHalal) {
-        if (content.contains(k)) return 'Non-Halal (Detected)';
-      }
-
-      // Known clearly-halal ingredients
-      final halalKnown = [
-        'chicken', 'ayam', 'beef', 'sapi', 'lamb', 'domba', 'goat', 'kambing', 'mutton',
-        'fish', 'ikan', 'shrimp', 'udang', 'prawn', 'salmon', 'tuna', 'tilapia', 'egg', 'telur', 'tofu', 'tempe', 'tempeh'
-      ];
-
-      for (var k in halalKnown) {
-        if (content.contains(k)) return 'Halal';
-      }
-
-      // Trust explicit AI label only if it contains 'halal' and nothing non-halal detected
-      final rawLabel = item['halal_status']?.toString() ?? '';
-      if (rawLabel.toLowerCase().contains('halal')) return 'Halal';
-
-      // Otherwise be conservative
-      return 'Unknown';
-    } catch (e) {
-      return item['halal_status']?.toString() ?? 'Unknown';
-    }
-  }
 
   // --- GENERATE RECIPE LOGIC ---
   Future<void> _generateRecipe() async {
@@ -437,24 +373,12 @@ class _GenerateRecipeScreenState extends State<GenerateRecipeScreen> {
       if (jsonResult is List) {
         for (var item in jsonResult) {
           if (item is Map<String, dynamic>) {
-            // Apply conservative halal validation before constructing Recipe
-            try {
-              final validatedStatus = _validateHalalConservative(item);
-              item['halal_status'] = validatedStatus;
-            } catch (e) {
-              // If validator fails for any reason, fall back to whatever AI returned
-            }
-
+            // HalalValidator sekarang dipanggil otomatis di Recipe.fromJson
             final cleanItem = RecipeUtils.fixRecipeFormat(item);
             recipes.add(Recipe.fromJson(cleanItem, isGeneratedByAi: true));
           }
         }
       } else if (jsonResult is Map<String, dynamic>) {
-        try {
-          final validatedStatus = _validateHalalConservative(jsonResult);
-          jsonResult['halal_status'] = validatedStatus;
-        } catch (e) {}
-
         final cleanItem = RecipeUtils.fixRecipeFormat(jsonResult);
         recipes.add(Recipe.fromJson(cleanItem, isGeneratedByAi: true));
       }
@@ -614,6 +538,19 @@ class _GenerateRecipeScreenState extends State<GenerateRecipeScreen> {
 
                       const SizedBox(height: 24),
 
+                      // GENERATE BUTTON (dipindah ke sini)
+                      GenerateButtonSection(
+                        showcaseKey: _buttonKey,
+                        isGenerating: isGenerating,
+                        isOnCooldown: _isOnCooldown,
+                        isOffline: isOffline,
+                        cooldownSeconds: _cooldownSeconds,
+                        personaLabel: GenerationConstants.personas[_selectedPersonaKey]!['label'],
+                        onPressed: _generateRecipe,
+                      ),
+
+                      const SizedBox(height: 24),
+
                       // 2. PERSONA SELECTOR
                       PersonaSelectorWidget(
                         showcaseKey: _personaKey,
@@ -678,16 +615,7 @@ class _GenerateRecipeScreenState extends State<GenerateRecipeScreen> {
 
                       const SizedBox(height: 24),
 
-                      // 4. GENERATE BUTTON
-                      GenerateButtonSection(
-                        showcaseKey: _buttonKey,
-                        isGenerating: isGenerating,
-                        isOnCooldown: _isOnCooldown,
-                        isOffline: isOffline,
-                        cooldownSeconds: _cooldownSeconds,
-                        personaLabel: GenerationConstants.personas[_selectedPersonaKey]!['label'],
-                        onPressed: _generateRecipe,
-                      ),
+                      // Generate button sudah dipindah ke atas
 
                       const SizedBox(height: 40),
 

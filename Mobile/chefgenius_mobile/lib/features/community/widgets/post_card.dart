@@ -355,6 +355,16 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
                     ),
                   ),
                 ),
+                // Pin indicator for pinned posts
+                if (post['is_pinned'] == true)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Icon(
+                      Icons.push_pin,
+                      size: 18,
+                      color: Colors.orange,
+                    ),
+                  ),
                 IconButton(
                   icon: Icon(Icons.more_horiz, color: subTextColor),
                   onPressed: () => widget.onOptions(post, widget.index),

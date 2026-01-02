@@ -15,6 +15,7 @@ import '../widgets/recipe_ingredients_list.dart';
 import '../widgets/recipe_steps_list.dart';
 import '../widgets/recipe_floating_buttons.dart';
 import '../widgets/recipe_rating_widget.dart';
+import '../widgets/halal_status_card.dart';
 
 class RecipeDetailScreen extends StatefulWidget {
   final Recipe recipe;
@@ -367,11 +368,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                     ),
 
                     if (widget.recipe.halalStatus.isNotEmpty)
-                      RecipeInfoSection(
-                        title: "Status Halal",
-                        data: widget.recipe.halalStatus,
-                        icon: Icons.verified_user_outlined,
-                        iconColor: Colors.green,
+                      HalalStatusCard(
+                        halalStatus: widget.recipe.halalStatus,
+                        detectedNonHalal: widget.recipe.detectedNonHalal,
                       ),
 
                     // Ingredients List

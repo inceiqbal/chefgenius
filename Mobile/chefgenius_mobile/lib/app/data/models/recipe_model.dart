@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'ingredient_model.dart';
+import '../utils/halal_validator.dart';
 
 part 'recipe_model.g.dart';
 
@@ -37,6 +38,10 @@ class Recipe {
   @HiveField(13)
   final Map<String, String> nutrition; 
 
+  // --- FIELD BARU: BAHAN NON-HALAL TERDETEKSI ---
+  @HiveField(14)
+  final List<String> detectedNonHalal;
+
   Recipe({
     required this.id,
     required this.title,
@@ -51,16 +56,16 @@ class Recipe {
     this.isFavorite = false,
     this.isAiGenerated = false,
     this.halalStatus = "Halal",
-    this.nutrition = const {}, // Default kosong biar gak error data lama
+    this.nutrition = const {},
+    this.detectedNonHalal = const [],
   });
+
 
   factory Recipe.fromJson(Map<String, dynamic> json,
       {bool isGeneratedByAi = false}) {
     List<Ingredient> ingredientsList = [];
     List<String> mainIngredientsList = [];
     List<String> stepsList = [];
-
-    String statusHalal = "Halal";
 
     // --- HELPER: PAWANG DATA ---
     List<String> parseStringList(dynamic data) {
@@ -84,13 +89,11 @@ class Recipe {
           'fat': value['fat']?.toString() ?? '-',
         };
       }
-      return {}; // Kosongin aja kalau gak ada datanya
+      return {};
     }
     // --------------------------------------------
 
     if (isGeneratedByAi) {
-      statusHalal = json['halal_status']?.toString() ?? 'Halal';
-
       // 1. Handle all_ingredients
       var rawIngredients = json['all_ingredients'];
       if (rawIngredients is List) {
@@ -152,21 +155,12 @@ class Recipe {
             .map((name) => Ingredient(name: name, quantity: ''))
             .toList();
       }
-
-      // Logic Auto-Detect Halal
-      for (var ingredient in mainIngredientsList) {
-        final lowerIngredient = ingredient.toLowerCase();
-        if (lowerIngredient.contains('pork') ||
-            lowerIngredient.contains('babi') ||
-            lowerIngredient.contains('wine') ||
-            lowerIngredient.contains('alcohol') ||
-            lowerIngredient.contains('bacon') ||
-            lowerIngredient.contains('ham')) {
-          statusHalal = "Non Halal (Bahan Terdeteksi)";
-          break;
-        }
-      }
     }
+
+    // --- VALIDASI HALAL MENGGUNAKAN HALAL VALIDATOR ---
+    final halalResult = HalalValidator.validate(json);
+    final String statusHalal = halalResult['status'] as String;
+    final List<String> detectedList = List<String>.from(halalResult['detected'] ?? []);
 
     return Recipe(
       id: isGeneratedByAi ? 0 : (json['id'] as num? ?? 0).toInt(),
@@ -180,11 +174,13 @@ class Recipe {
       steps: stepsList,
       isAiGenerated: isGeneratedByAi,
       halalStatus: statusHalal,
+      detectedNonHalal: detectedList,
       score: (json['score'] as num? ?? 0.0).toDouble(),
       isFavorite: json['isFavorite'] ?? false,
-      nutrition: parseNutrition(json['nutrition']), // Load Nutrisi
+      nutrition: parseNutrition(json['nutrition']),
     );
   }
+
 
   Map<String, dynamic> toJson() {
     final List<String> ingredientNames =

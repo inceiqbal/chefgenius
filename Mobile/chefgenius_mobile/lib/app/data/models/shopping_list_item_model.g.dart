@@ -1,3 +1,5 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
 part of 'shopping_list_item_model.dart';
 
 // **************************************************************************

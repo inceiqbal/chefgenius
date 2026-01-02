@@ -63,6 +63,7 @@ class _PantryScreenState extends State<PantryScreen> {
   final GlobalKey _helpKey = GlobalKey(); 
 
   bool _shouldAutoStartTour = false; 
+  bool _isShowingLevelUp = false; // Flag untuk tracking dialog level up
 
   @override
   void initState() {
@@ -138,6 +139,7 @@ class _PantryScreenState extends State<PantryScreen> {
   }
 
   void _showLevelUpDialog(int newLevel) {
+    _isShowingLevelUp = true; // Set flag sebelum show dialog
     final lang = Provider.of<LanguageProvider>(context, listen: false);
     showDialog(
       context: context,
@@ -145,7 +147,22 @@ class _PantryScreenState extends State<PantryScreen> {
       builder: (context) => LevelUpDialog(
         newLevel: newLevel,
         rankTitle: _getRankTitle(newLevel, lang),
-        onContinue: () => Navigator.pop(context),
+        onContinue: () {
+          Navigator.pop(context);
+          _isShowingLevelUp = false; // Reset flag setelah dialog ditutup
+          // Jalankan showcase yang tertunda (jika ada)
+          if (_shouldAutoStartTour && mounted) {
+            _shouldAutoStartTour = false;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                // Perlu akses ShowCaseWidget context, akan ditangani di build
+                setState(() {
+                  _shouldAutoStartTour = true; // Trigger rebuild untuk jalankan tour
+                });
+              }
+            });
+          }
+        },
       ),
     );
   }
@@ -478,7 +495,8 @@ class _PantryScreenState extends State<PantryScreen> {
       },
       blurValue: 1,
       builder: (innerContext) {
-        if (_shouldAutoStartTour) {
+        // Hanya jalankan showcase jika tidak sedang ada dialog level up
+        if (_shouldAutoStartTour && !_isShowingLevelUp) {
           _shouldAutoStartTour = false;
           WidgetsBinding.instance.addPostFrameCallback((_) {
              _resetAndStartTour(innerContext);

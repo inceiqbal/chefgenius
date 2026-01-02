@@ -31,13 +31,14 @@ class RecipeAdapter extends TypeAdapter<Recipe> {
       isAiGenerated: fields[11] as bool,
       halalStatus: fields[12] as String,
       nutrition: (fields[13] as Map).cast<String, String>(),
+      detectedNonHalal: (fields[14] as List).cast<String>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, Recipe obj) {
     writer
-      ..writeByte(14)
+      ..writeByte(15)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -65,7 +66,9 @@ class RecipeAdapter extends TypeAdapter<Recipe> {
       ..writeByte(12)
       ..write(obj.halalStatus)
       ..writeByte(13)
-      ..write(obj.nutrition);
+      ..write(obj.nutrition)
+      ..writeByte(14)
+      ..write(obj.detectedNonHalal);
   }
 
   @override
