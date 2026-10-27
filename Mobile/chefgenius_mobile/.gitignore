@@ -58,3 +58,16 @@ ios/Runner/GoogleService-Info.plist
 *.jks
 *.keystore
 key.properties
+# Binary berat & repo lain yang tidak terkait TA
+cloudflared.exe
+be-chatbot-itk-main/
+website/
+
+# Dokumen Word (lampirkan terpisah, jangan di repo kode)
+*.docx
+
+# Dataset resep umum (puluhan MB)
+dataset/
+
+# Cache Supabase CLI
+supabase/.temp/
