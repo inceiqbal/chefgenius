@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../app/data/providers/theme_provider.dart';
 import '../../../app/data/providers/language_provider.dart';
 import '../../../app/widgets/custom_app_bar.dart';
+import '../../../app/widgets/modern_alert_dialog.dart';
 import '../../../app/config/routes.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -85,40 +86,99 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showThemeDialog(ThemeProvider themeProvider, LanguageProvider lang) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     showModalBottomSheet(
       context: context,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
-          padding: const EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                lang.getText('theme_title'),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-              const SizedBox(height: 16),
-              _buildThemeOption(
-                context, 
-                lang.getText('theme_system'), 
-                ThemeMode.system, 
-                themeProvider
+              
+              // Header
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(colors: [Color(0xFF9B59B6), Color(0xFF8E44AD)]),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(color: const Color(0xFF9B59B6).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2)),
+                        ],
+                      ),
+                      child: const Icon(Icons.palette_rounded, color: Colors.white, size: 20),
+                    ),
+                    const SizedBox(width: 14),
+                    Text(
+                      lang.getText('theme_title'),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: isDarkMode ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              _buildThemeOption(
-                context, 
-                lang.getText('theme_light'), 
-                ThemeMode.light, 
-                themeProvider
-              ),
-              _buildThemeOption(
-                context, 
-                lang.getText('theme_dark'), 
-                ThemeMode.dark, 
-                themeProvider
+              
+              // Options
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                child: Column(
+                  children: [
+                    _buildModernThemeOption(
+                      context, 
+                      lang.getText('theme_system'),
+                      'Ikuti pengaturan sistem',
+                      Icons.settings_brightness_rounded,
+                      const [Color(0xFF3498DB), Color(0xFF2980B9)],
+                      ThemeMode.system, 
+                      themeProvider,
+                      isDarkMode,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildModernThemeOption(
+                      context, 
+                      lang.getText('theme_light'),
+                      'Mode terang',
+                      Icons.light_mode_rounded,
+                      const [Color(0xFFF39C12), Color(0xFFE67E22)],
+                      ThemeMode.light, 
+                      themeProvider,
+                      isDarkMode,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildModernThemeOption(
+                      context, 
+                      lang.getText('theme_dark'),
+                      'Mode gelap',
+                      Icons.dark_mode_rounded,
+                      const [Color(0xFF34495E), Color(0xFF2C3E50)],
+                      ThemeMode.dark, 
+                      themeProvider,
+                      isDarkMode,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -127,26 +187,79 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildThemeOption(BuildContext context, String title, ThemeMode mode, ThemeProvider provider) {
+  Widget _buildModernThemeOption(
+    BuildContext context, 
+    String title, 
+    String subtitle,
+    IconData icon,
+    List<Color> gradient,
+    ThemeMode mode, 
+    ThemeProvider provider,
+    bool isDarkMode,
+  ) {
     final isSelected = provider.themeMode == mode;
-    return ListTile(
-      leading: Icon(
-        mode == ThemeMode.light ? Icons.light_mode : 
-        mode == ThemeMode.dark ? Icons.dark_mode : Icons.settings_brightness,
-        color: isSelected ? Colors.orange : Colors.grey,
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: isSelected ? Colors.orange : null,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        ),
-      ),
-      trailing: isSelected ? const Icon(Icons.check, color: Colors.orange) : null,
+    return GestureDetector(
       onTap: () {
         provider.setTheme(mode);
         Navigator.pop(context);
       },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? gradient.first.withOpacity(0.15)
+              : (isDarkMode ? Colors.white.withOpacity(0.05) : Colors.grey.shade50),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? gradient.first : (isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: gradient),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                      color: isDarkMode ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: gradient.first,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check_rounded, color: Colors.white, size: 14),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -353,6 +466,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     LanguageProvider lang;
     try {
@@ -362,146 +476,208 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
 
     if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        backgroundColor: isDarkMode ? const Color(0xFF121212) : const Color(0xFFFAFAFA),
+        body: const Center(child: CircularProgressIndicator(color: Colors.orange)),
+      );
     }
 
     return Scaffold(
-      appBar: CustomAppBar(title: lang.getText('settings_title')),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
-        children: [
-          _buildSectionHeader(lang.getText('pref_diet_title')),
-          Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Column(
+      backgroundColor: isDarkMode ? const Color(0xFF121212) : const Color(0xFFFAFAFA),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: isDarkMode ? const Color(0xFF1A1A2E) : const Color(0xFFFFF8F0),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_rounded, color: isDarkMode ? Colors.white : Colors.black87),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [Color(0xFF9B59B6), Color(0xFF8E44AD)]),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.settings_rounded, color: Colors.white, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              lang.getText('settings_title'),
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.w800,
+                fontSize: 20,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ],
+        ),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDarkMode
+                ? [const Color(0xFF1A1A2E), const Color(0xFF121212)]
+                : [const Color(0xFFFFF8F0), const Color(0xFFFAFAFA)],
+          ),
+        ),
+        child: ListView(
+          padding: const EdgeInsets.all(16.0),
+          children: [
+            _buildModernSectionHeader(lang.getText('pref_diet_title'), Icons.restaurant_menu_rounded, Colors.orange, isDarkMode),
+            const SizedBox(height: 12),
+            _buildModernCard(
+              isDarkMode: isDarkMode,
               children: [
-                _buildSettingsTile(
+                _buildModernSettingsTile(
                   context: context,
-                  icon: Icons.restaurant_menu,
-                  color: Colors.orange,
+                  icon: Icons.eco_rounded,
+                  gradient: const [Color(0xFF27AE60), Color(0xFF1E8449)],
                   title: lang.getText('diet_menu_title'),
-                  // --- PERBAIKAN DI SINI (LowerCase) ---
-                  // Kita paksa key-nya jadi lowercase biar match sama file JSON bahasa
                   subtitle: _selectedDiets.isEmpty
                       ? lang.getText('diet_menu_subtitle')
-                      : _selectedDiets.map((key) {
+                      : _selectedDiets.take(2).map((key) {
                           final label = lang.getText('diet_${key.toLowerCase()}_title');
-                          // Jika tidak ada di localization, fallback: ubah underscore ke spasi dan kapitalisasi
                           if (label == 'diet_${key.toLowerCase()}_title') {
                             return key.replaceAll('_', ' ').replaceFirst(key[0], key[0].toUpperCase());
                           }
                           return label;
-                        }).join(", "),
-                  // -------------------------------------
+                        }).join(", ") + (_selectedDiets.length > 2 ? " +${_selectedDiets.length - 2}" : ""),
                   onTap: () => _showDietSelectionDialog(lang),
+                  isDarkMode: isDarkMode,
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          _buildSectionHeader(lang.getText('display_lang_title')),
-          Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Column(
+            _buildModernSectionHeader(lang.getText('display_lang_title'), Icons.palette_rounded, Colors.purple, isDarkMode),
+            const SizedBox(height: 12),
+            _buildModernCard(
+              isDarkMode: isDarkMode,
               children: [
-                _buildSettingsTile(
+                _buildModernSettingsTile(
                   context: context,
-                  icon: Icons.brightness_6_outlined,
-                  color: Colors.purple,
+                  icon: Icons.brightness_6_rounded,
+                  gradient: const [Color(0xFF9B59B6), Color(0xFF8E44AD)],
                   title: lang.getText('theme_title'),
                   subtitle: _getThemeSubtitle(themeProvider.themeMode, lang),
                   onTap: () => _showThemeDialog(themeProvider, lang),
+                  isDarkMode: isDarkMode,
                 ),
-                const Divider(height: 1, indent: 72),
-                _buildSettingsTile(
+                Divider(height: 1, color: Colors.grey.withOpacity(0.2), indent: 72),
+                _buildModernSettingsTile(
                   context: context,
-                  icon: Icons.language,
-                  color: Colors.orange,
+                  icon: Icons.translate_rounded,
+                  gradient: const [Color(0xFFE67E22), Color(0xFFD35400)],
                   title: lang.getText('language_menu'),
-                  subtitle: lang.appLocale.languageCode == 'id' ? 'Bahasa Indonesia' : 'English',
+                  subtitle: lang.appLocale.languageCode == 'id' ? '🇮🇩 Bahasa Indonesia' : '🇺🇸 English',
                   onTap: () => _showLanguageDialog(lang),
+                  isDarkMode: isDarkMode,
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          _buildSectionHeader(lang.getText('account_title')),
-          Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Column(
+            _buildModernSectionHeader(lang.getText('account_title'), Icons.person_rounded, Colors.blue, isDarkMode),
+            const SizedBox(height: 12),
+            _buildModernCard(
+              isDarkMode: isDarkMode,
               children: [
-                _buildSettingsTile(
+                _buildModernSettingsTile(
                   context: context,
-                  icon: Icons.lock_outline,
-                  color: Colors.deepOrange,
+                  icon: Icons.lock_rounded,
+                  gradient: const [Color(0xFFE74C3C), Color(0xFFC0392B)],
                   title: lang.getText('change_password'),
-                  onTap: () {
-                    Navigator.pushNamed(context, AppRoutes.changePasswordRoute);
-                  },
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.changePasswordRoute),
+                  isDarkMode: isDarkMode,
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          _buildSectionHeader(lang.getText('about_title')),
-          Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Column(
+            _buildModernSectionHeader(lang.getText('about_title'), Icons.info_rounded, Colors.teal, isDarkMode),
+            const SizedBox(height: 12),
+            _buildModernCard(
+              isDarkMode: isDarkMode,
               children: [
-                _buildSettingsTile(
+                _buildModernSettingsTile(
                   context: context,
-                  icon: Icons.info_outline,
-                  color: Colors.teal,
+                  icon: Icons.info_outline_rounded,
+                  gradient: const [Color(0xFF1ABC9C), Color(0xFF16A085)],
                   title: lang.getText('about_app'),
-                  onTap: () {
-                    Navigator.pushNamed(context, AppRoutes.aboutRoute);
-                  },
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.aboutRoute),
+                  isDarkMode: isDarkMode,
                 ),
-                const Divider(height: 1, indent: 72),
-                _buildSettingsTile(
+                Divider(height: 1, color: Colors.grey.withOpacity(0.2), indent: 72),
+                _buildModernSettingsTile(
                   context: context,
-                  icon: Icons.description_outlined,
-                  color: Colors.orange,
+                  icon: Icons.description_rounded,
+                  gradient: const [Color(0xFFE67E22), Color(0xFFD35400)],
                   title: lang.getText('terms'),
-                  onTap: () {
-                    Navigator.pushNamed(context, AppRoutes.termsRoute);
-                  },
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.termsRoute),
+                  isDarkMode: isDarkMode,
                 ),
-                const Divider(height: 1, indent: 72),
-                _buildSettingsTile(
+                Divider(height: 1, color: Colors.grey.withOpacity(0.2), indent: 72),
+                _buildModernSettingsTile(
                   context: context,
-                  icon: Icons.privacy_tip_outlined,
-                  color: Colors.green,
+                  icon: Icons.privacy_tip_rounded,
+                  gradient: const [Color(0xFF27AE60), Color(0xFF1E8449)],
                   title: lang.getText('privacy'),
-                  onTap: () {
-                    Navigator.pushNamed(context, AppRoutes.privacyPolicyRoute);
-                  },
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.privacyPolicyRoute),
+                  isDarkMode: isDarkMode,
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[400] : Colors.grey[600],
+  Widget _buildModernSectionHeader(String title, IconData icon, Color color, bool isDarkMode) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, size: 18, color: color),
         ),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: isDarkMode ? Colors.grey.shade300 : Colors.grey.shade700,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModernCard({required bool isDarkMode, required List<Widget> children}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDarkMode ? 0.15 : 0.06),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Column(children: children),
       ),
     );
   }
@@ -514,30 +690,75 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  // PERBAIKAN TYPO FATAL ADA DI SINI
-  Widget _buildSettingsTile({
+  Widget _buildModernSettingsTile({
     required BuildContext context,
     required IconData icon,
-    required Color color,
+    required List<Color> gradient,
     required String title,
     String? subtitle,
     required VoidCallback onTap,
+    required bool isDarkMode,
   }) {
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          shape: BoxShape.circle,
-        ), // <--- TADI SALAH KETIK PAKE '}' DISINI, UDAH DIBENERIN JADI ')'
-        child: Icon(icon, color: color, size: 20),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: gradient),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: gradient.first.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(icon, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: isDarkMode ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.orange.shade400,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: isDarkMode ? Colors.grey.shade600 : Colors.grey.shade400,
+              ),
+            ],
+          ),
+        ),
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
-      subtitle: subtitle != null
-          ? Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.orangeAccent))
-          : null,
-      trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
-      onTap: onTap,
     );
   }
 }

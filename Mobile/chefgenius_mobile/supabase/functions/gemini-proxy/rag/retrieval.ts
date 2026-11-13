@@ -79,7 +79,8 @@ export async function retrieveContext(
             for (const ent of entityMatches) {
                 if (!fallbackTerms.includes(ent)) fallbackTerms.push(ent)
             }
-            const acronyms = userMessage.match(/\b[A-Z0-9]{2,}\b|\b[A-Z][a-z]*[A-Z0-9][a-zA-Z0-9]*\b/g) || []
+            const acronyms = (userMessage.match(/\b[A-Z0-9]{2,}\b|\b[A-Z][a-z]*[A-Z0-9][a-zA-Z0-9]*\b/g) || [])
+                .filter(ac => /[a-zA-Z]/.test(ac))
             for (const ac of acronyms) {
                 if (ac.length >= 2 && !fallbackTerms.includes(ac)) fallbackTerms.push(ac)
             }
@@ -161,7 +162,8 @@ export async function retrieveContext(
                 }
             }
 
-            const acronyms = origQueryText.match(/\b[A-Z0-9]{2,}\b|\b[A-Z][a-z]*[A-Z0-9][a-zA-Z0-9]*\b/g) || []
+            const acronyms = (origQueryText.match(/\b[A-Z0-9]{2,}\b|\b[A-Z][a-z]*[A-Z0-9][a-zA-Z0-9]*\b/g) || [])
+                .filter(ac => /[a-zA-Z]/.test(ac))
             const sortedAcronyms = [...new Set(acronyms)].sort((a, b) => b.length - a.length)
             for (const ac of sortedAcronyms) {
                 if (ac.length >= 2 && !searchTerms.includes(ac)) {
@@ -178,10 +180,19 @@ export async function retrieveContext(
                 const combined = rewrWords.join(' ')
                 if (!searchTerms.includes(combined)) searchTerms.push(combined)
             } else if (rewrWords.length > 3) {
-                const chunk1 = rewrWords.slice(0, 3).join(' ')
-                const chunk2 = rewrWords.slice(3, 6).join(' ')
-                if (!searchTerms.includes(chunk1)) searchTerms.push(chunk1)
-                if (chunk2 && !searchTerms.includes(chunk2)) searchTerms.push(chunk2)
+                // Iterasi seluruh kata hasil rewrite dalam window 3-kata agar tidak ada kata yang terpotong
+                for (let i = 0; i < rewrWords.length; i += 3) {
+                    const chunk = rewrWords.slice(i, i + 3).join(' ')
+                    if (chunk && !searchTerms.includes(chunk)) {
+                        searchTerms.push(chunk)
+                    }
+                }
+            }
+            // Sertakan juga kata kunci klinis individu (unigram >= 5 karakter) untuk menangkap istilah spesifik
+            for (const word of rewrWords) {
+                if (word.length >= 5 && !searchTerms.includes(word)) {
+                    searchTerms.push(word)
+                }
             }
         }
 
@@ -195,15 +206,20 @@ export async function retrieveContext(
             }
         }
 
-        for (const term of searchTerms.slice(0, 4)) {
-            const { data: kwData, error: kwError } = await supabaseService
-                .from('knowledge_base')
-                .select('id, category, title, content, source, metadata')
-                .textSearch('content', term, { config: 'indonesian', type: 'plain' })
-                .limit(BM25_FETCH_COUNT)
+        const termsToSearch = searchTerms.slice(0, 6)
+        const kwResults = await Promise.all(
+            termsToSearch.map(term =>
+                supabaseService
+                    .from('knowledge_base')
+                    .select('id, category, title, content, source, metadata')
+                    .textSearch('content', term, { config: 'indonesian', type: 'plain' })
+                    .limit(BM25_FETCH_COUNT)
+            )
+        )
 
-            if (!kwError && kwData && kwData.length > 0) {
-                allKwDocs.push(...kwData)
+        for (const res of kwResults) {
+            if (!res.error && res.data && res.data.length > 0) {
+                allKwDocs.push(...res.data)
             }
         }
 

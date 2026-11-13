@@ -36,5 +36,5 @@ enabled = true
 # Port to use for the email testing server web interface.
 port = 54324
 
-[functions]
-# Configuration for Supabase Edge Functions
+[functions.gemini-proxy]
+verify_jwt = false

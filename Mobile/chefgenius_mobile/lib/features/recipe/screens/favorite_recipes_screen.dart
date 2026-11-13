@@ -4,8 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../../app/data/models/recipe_model.dart';
-// RecommendationService udah gak kita pake di file ini
-import '../../../app/widgets/custom_app_bar.dart';
 import '../widgets/recipe_card.dart';
 import '../screens/recipe_detail_screen.dart';
 import '../../../app/data/providers/connectivity_provider.dart';
@@ -47,9 +45,6 @@ class _FavoriteRecipesScreenState extends State<FavoriteRecipesScreen> {
       final List<Recipe> normalFavorites = [];
       final List<Recipe> aiFavorites = [];
 
-      // --- BAGIAN RESEP NORMAL (CARA BARU YANG NGEBUT) ---
-
-      // 1. Ambil list ID favorit kita
       final List<dynamic> idData = await supabase
           .from('favorite_recipes')
           .select('recipe_id')
@@ -59,15 +54,11 @@ class _FavoriteRecipesScreenState extends State<FavoriteRecipesScreen> {
         final List<int> favoriteRecipeIds =
             idData.map((fav) => fav['recipe_id'] as int).toList();
 
-        // 2. Ambil detail resep HANYA untuk ID yang kita punya
-        // --- INI DIA FIX-NYA (Pake .filter() versi lama yg pasti aman) ---
         final List<dynamic> recipeData = await supabase
             .from('recipes')
-            .select('*') // <-- SELECT DULU
-            .filter('id', 'in', favoriteRecipeIds); // <-- BARU FILTER PAKE CARA INI
-        // ----------------------------------------------------------------
+            .select('*')
+            .filter('id', 'in', favoriteRecipeIds);
 
-        // 3. Ubah JSON jadi List<Recipe>
         final List<Recipe> foundNormalFavorites = recipeData.map((json) {
           final recipe = Recipe.fromJson(json, isGeneratedByAi: false);
 
@@ -79,14 +70,13 @@ class _FavoriteRecipesScreenState extends State<FavoriteRecipesScreen> {
                 .getPublicUrl('Food Images/$filename');
           }
 
-          recipe.isFavorite = true; // Pasti favorit
+          recipe.isFavorite = true;
           return recipe;
         }).toList();
 
         normalFavorites.addAll(foundNormalFavorites);
       }
 
-      // --- BAGIAN RESEP AI (TETAP SAMA, UDAH BENER) ---
       final List<dynamic> aiData = await supabase
           .from('ai_favorite_recipes')
           .select(
@@ -110,7 +100,6 @@ class _FavoriteRecipesScreenState extends State<FavoriteRecipesScreen> {
 
             String statusHalal = data['halal_status'] ?? 'Halal';
 
-            // Cek ulang statusnya
             for (var ingredient in ingredients) {
               final lowerIngredient = ingredient.name.toLowerCase();
                 if (lowerIngredient.contains('pork') ||
@@ -147,7 +136,6 @@ class _FavoriteRecipesScreenState extends State<FavoriteRecipesScreen> {
         }
       }
 
-      // 4. KALO BERHASIL: Gabungin & Simpen ke Cache Hive
       final allFavorites = [...aiFavorites, ...normalFavorites];
       await favBox.clear();
       Map<String, Recipe> favMap = { for (var r in allFavorites) r.title : r };
@@ -157,7 +145,6 @@ class _FavoriteRecipesScreenState extends State<FavoriteRecipesScreen> {
       return allFavorites;
 
     } catch (e) {
-      // 5. KALO GAGAL (meskipun online, misal Supabase error):
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -166,7 +153,6 @@ class _FavoriteRecipesScreenState extends State<FavoriteRecipesScreen> {
               backgroundColor: Theme.of(context).colorScheme.error),
         );
       }
-      // Pake cache sebagai fallback
       return favBox.values.toList();
     }
   }
@@ -184,14 +170,30 @@ class _FavoriteRecipesScreenState extends State<FavoriteRecipesScreen> {
     });
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String title, IconData icon, Color color, bool isDarkMode) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
             ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: isDarkMode ? Colors.white : Colors.black87,
+              letterSpacing: -0.3,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -199,129 +201,203 @@ class _FavoriteRecipesScreenState extends State<FavoriteRecipesScreen> {
   @override
   Widget build(BuildContext context) {
     final isOffline = context.watch<ConnectivityProvider>().isOffline;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: const CustomAppBar(title: 'Resep Favorit'),
-      body: Column(
-        children: [
-          const OfflineBanner(),
-          Expanded(
-            child: FutureBuilder<List<Recipe>>(
-              future: _allFavoriteRecipesFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+      backgroundColor: isDarkMode ? const Color(0xFF121212) : const Color(0xFFFAFAFA),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: isDarkMode ? const Color(0xFF1A1A2E) : const Color(0xFFFFF8F0),
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back_rounded,
+            color: isDarkMode ? Colors.white : Colors.black87,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFE74C3C), Color(0xFFC0392B)],
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.favorite_rounded, color: Colors.white, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Resep Favorit',
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.w800,
+                fontSize: 20,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ],
+        ),
+        centerTitle: false,
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDarkMode
+                ? [const Color(0xFF1A1A2E), const Color(0xFF121212)]
+                : [const Color(0xFFFFF8F0), const Color(0xFFFAFAFA)],
+          ),
+        ),
+        child: Column(
+          children: [
+            const OfflineBanner(),
+            Expanded(
+              child: FutureBuilder<List<Recipe>>(
+                future: _allFavoriteRecipesFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator(color: Colors.orange));
+                  }
 
-                if (snapshot.hasData) {
-                  final allFavoriteRecipes = snapshot.data!;
+                  if (snapshot.hasData) {
+                    final allFavoriteRecipes = snapshot.data!;
 
-                  if (allFavoriteRecipes.isEmpty) {
-                    return const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.favorite_border,
-                              size: 80, color: Colors.grey),
-                          SizedBox(height: 16),
-                          Text(
-                            'Anda belum punya resep favorit.',
-                            style: TextStyle(fontSize: 18, color: Colors.grey),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 40.0, vertical: 8.0),
-                            child: Text(
-                              'Resep AI & resep biasa yang Anda suka akan muncul di sini.',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey,
-                                  height: 1.4),
-                              textAlign: TextAlign.center,
+                    if (allFavoriteRecipes.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            TweenAnimationBuilder<double>(
+                              tween: Tween(begin: 0.9, end: 1.0),
+                              duration: const Duration(milliseconds: 800),
+                              curve: Curves.elasticOut,
+                              builder: (context, value, child) {
+                                return Transform.scale(scale: value, child: child);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(28),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: isDarkMode
+                                        ? [const Color(0xFF2A2520).withOpacity(0.5), const Color(0xFF1E1A18).withOpacity(0.3)]
+                                        : [Colors.red.shade50, Colors.red.shade100.withOpacity(0.5)],
+                                  ),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.favorite_border_rounded, size: 60, color: Colors.red),
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 24),
+                            Text(
+                              'Belum ada resep favorit',
+                              style: TextStyle(
+                                fontSize: 18, 
+                                color: isDarkMode ? Colors.grey.shade300 : Colors.grey.shade700,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                              child: Text(
+                                'Resep AI & resep biasa yang kamu suka akan muncul di sini ❤️',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade500,
+                                  height: 1.5,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    final aiRecipes =
+                        allFavoriteRecipes.where((r) => r.isAiGenerated).toList();
+                    final normalRecipes = allFavoriteRecipes
+                        .where((r) => !r.isAiGenerated)
+                        .toList();
+
+                    return RefreshIndicator(
+                      onRefresh: isOffline ? () async {} : _refreshFavorites,
+                      color: Colors.orange,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (aiRecipes.isNotEmpty) ...[
+                              _buildSectionHeader('Resep Buatan AI', Icons.auto_awesome_rounded, Colors.orange, isDarkMode),
+                              ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                itemCount: aiRecipes.length,
+                                itemBuilder: (context, index) {
+                                  final recipe = aiRecipes[index];
+                                  return GestureDetector(
+                                    onTap: () async {
+                                      await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              RecipeDetailScreen(recipe: recipe),
+                                        ),
+                                      );
+                                      if (!isOffline) {
+                                        _refreshFavorites();
+                                      }
+                                    },
+                                    child: RecipeCard(recipe: recipe),
+                                  );
+                                },
+                              ),
+                            ],
+                            if (normalRecipes.isNotEmpty) ...[
+                              _buildSectionHeader('Resep dari Database', Icons.restaurant_menu_rounded, Colors.blue, isDarkMode),
+                              ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                itemCount: normalRecipes.length,
+                                itemBuilder: (context, index) {
+                                  final recipe = normalRecipes[index];
+                                  return GestureDetector(
+                                    onTap: () async {
+                                      await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              RecipeDetailScreen(recipe: recipe),
+                                        ),
+                                      );
+                                      if (!isOffline) {
+                                        _refreshFavorites();
+                                      }
+                                    },
+                                    child: RecipeCard(recipe: recipe),
+                                  );
+                                },
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
                     );
                   }
 
-                  final aiRecipes =
-                      allFavoriteRecipes.where((r) => r.isAiGenerated).toList();
-                  final normalRecipes = allFavoriteRecipes
-                      .where((r) => !r.isAiGenerated)
-                      .toList();
-
-                  return RefreshIndicator(
-                    onRefresh: isOffline ? () async {} : _refreshFavorites,
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (aiRecipes.isNotEmpty) ...[
-                            _buildSectionHeader('Resep Buatan AI'),
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: aiRecipes.length,
-                              itemBuilder: (context, index) {
-                                final recipe = aiRecipes[index];
-                                return GestureDetector(
-                                  onTap: () async {
-                                    await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            RecipeDetailScreen(recipe: recipe),
-                                      ),
-                                    );
-                                    if (!isOffline) {
-                                      _refreshFavorites();
-                                    }
-                                  },
-                                  child: RecipeCard(recipe: recipe),
-                                );
-                              },
-                            ),
-                          ],
-                          if (normalRecipes.isNotEmpty) ...[
-                            _buildSectionHeader('Resep Favorit Biasa'),
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: normalRecipes.length,
-                              itemBuilder: (context, index) {
-                                final recipe = normalRecipes[index];
-                                return GestureDetector(
-                                  onTap: () async {
-                                    await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            RecipeDetailScreen(recipe: recipe),
-                                      ),
-                                    );
-                                    if (!isOffline) {
-                                      _refreshFavorites();
-                                    }
-                                  },
-                                  child: RecipeCard(recipe: recipe),
-                                );
-                              },
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                return const Center(
-                    child: Text('Terjadi kesalahan tidak terduga.'));
-              },
+                  return const Center(
+                      child: Text('Terjadi kesalahan tidak terduga.'));
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

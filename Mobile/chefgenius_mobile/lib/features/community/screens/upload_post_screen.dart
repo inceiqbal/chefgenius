@@ -369,323 +369,616 @@ class _UploadPostScreenState extends State<UploadPostScreen> {
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>();
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: isDarkMode ? const Color(0xFF121212) : const Color(0xFFFAFAFA),
       appBar: AppBar(
-        title: Text(lang.getText('upload_title')),
+        elevation: 0,
+        backgroundColor: isDarkMode ? const Color(0xFF1A1A2E) : const Color(0xFFFFF8F0),
+        leading: IconButton(
+          icon: Icon(Icons.close_rounded, color: isDarkMode ? Colors.white : Colors.black87),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [Color(0xFFE67E22), Color(0xFFD35400)]),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.add_photo_alternate_rounded, color: Colors.white, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              lang.getText('upload_title'),
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.w800,
+                fontSize: 20,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ],
+        ),
         actions: [
-          IconButton(
-            onPressed: _isUploading ? null : _uploadPost,
-            icon: _isUploading 
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.orange))
-              : const Icon(Icons.send, color: Colors.orange),
-          )
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: _isUploading
+                ? const Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.orange)))
+                : GestureDetector(
+                    onTap: _uploadPost,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(colors: [Color(0xFFE67E22), Color(0xFFD35400)]),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(color: const Color(0xFFE67E22).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2)),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.send_rounded, color: Colors.white, size: 16),
+                          SizedBox(width: 6),
+                          Text('Post', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ),
+                  ),
+          ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Media Preview Area (Carousel)
-            if (_mediaItems.isEmpty)
-              GestureDetector(
-                onTap: () => _showMediaPicker(context),
-                child: Container(
-                  height: 300,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.add_a_photo, size: 50, color: Colors.grey),
-                      const SizedBox(height: 8),
-                      Text(lang.getText('upload_tap_hint'), style: const TextStyle(color: Colors.grey)),
-                      const Text("(Maksimal 10 Slide)", style: TextStyle(color: Colors.grey, fontSize: 12)),
-                    ],
-                  ),
-                ),
-              )
-            else
-              Column(
-                children: [
-                  SizedBox(
-                    height: 300,
-                    child: PageView.builder(
-                      itemCount: _mediaItems.length,
-                      itemBuilder: (context, index) {
-                        final item = _mediaItems[index];
-                        final file = item['file'] as File;
-                        final type = item['type'] as String;
-
-                        return Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: type == 'image'
-                                  ? Image.file(file, fit: BoxFit.cover)
-                                  : GestureDetector(
-                                      onTap: () => _previewVideo(file),
-                                      child: Stack(
-                                        alignment: Alignment.center,
-                                        children: [
-                                          if (item['thumbnail'] != null)
-                                            Image.file(item['thumbnail'], fit: BoxFit.cover, width: double.infinity, height: double.infinity)
-                                          else
-                                            Container(color: Colors.black),
-                                          const Icon(Icons.play_circle_fill, size: 50, color: Colors.white70),
-                                        ],
-                                      ),
-                                    ),
-                            ),
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: IconButton(
-                                onPressed: () => _removeMedia(index),
-                                icon: const Icon(Icons.delete, color: Colors.red),
-                                style: IconButton.styleFrom(backgroundColor: Colors.white.withOpacity(0.8)),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 8,
-                              right: 8,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  "${index + 1}/${_mediaItems.length}",
-                                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  if (_mediaItems.length < 10)
-                    TextButton.icon(
-                      onPressed: () => _showMediaPicker(context),
-                      icon: const Icon(Icons.add_circle_outline),
-                      label: const Text("Tambah Slide"),
-                    ),
-                ],
-              ),
-
-            const SizedBox(height: 20),
-            
-            // OPSI RECOOK (HASIL MASAK DARI RESEP APLIKASI)
-            CheckboxListTile(
-              title: const Text("Ini hasil masak dari resep ChefGenius?"),
-              value: _isRecook,
-              onChanged: (val) {
-                setState(() {
-                  _isRecook = val ?? false;
-                  if (!_isRecook) {
-                    _selectedRecipeId = null;
-                    _selectedRecipeTitle = null;
-                    _recipeSearchController.clear();
-                    _titleController.clear();
-                  } else {
-                    _titleController.clear();
-                  }
-                });
-              },
-              controlAffinity: ListTileControlAffinity.leading,
-              contentPadding: EdgeInsets.zero,
-            ),
-
-            if (_isRecook) ...[
-              if (_selectedRecipeTitle != null)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.orange.shade200),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.restaurant_menu, color: Colors.orange),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          "Resep: $_selectedRecipeTitle",
-                          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.red),
-                        onPressed: () {
-                          setState(() {
-                            _selectedRecipeId = null;
-                            _selectedRecipeTitle = null;
-                            _titleController.clear();
-                          });
-                        },
-                      )
-                    ],
-                  ),
-                )
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDarkMode
+                ? [const Color(0xFF1A1A2E), const Color(0xFF121212)]
+                : [const Color(0xFFFFF8F0), const Color(0xFFFAFAFA)],
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Media Preview Area
+              if (_mediaItems.isEmpty)
+                _buildEmptyMediaPicker(isDarkMode, lang)
               else
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: _recipeSearchController,
-                      decoration: InputDecoration(
-                        hintText: "Cari nama resep...",
-                        prefixIcon: const Icon(Icons.search),
-                        border: const OutlineInputBorder(),
-                        suffixIcon: _isSearchingRecipe 
-                            ? const Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator(strokeWidth: 2)) 
-                            : null,
-                      ),
-                      onChanged: (val) {
-                        if (val.length > 2) _searchRecipes(val);
-                      },
-                    ),
-                    if (_recipeSearchResults.isNotEmpty)
-                      Container(
-                        constraints: const BoxConstraints(maxHeight: 200),
-                        margin: const EdgeInsets.only(top: 4, bottom: 16),
-                        decoration: BoxDecoration(
-                          // FIX: Tambahkan background color yang sesuai dark mode
-                          color: Theme.of(context).cardColor,
-                          border: Border.all(color: Theme.of(context).dividerColor),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: _recipeSearchResults.length,
-                          itemBuilder: (context, index) {
-                            final recipe = _recipeSearchResults[index];
-                            return ListTile(
-                              title: Text(recipe['title']),
-                              onTap: () {
-                                setState(() {
-                                  _selectedRecipeId = recipe['id'];
-                                  _selectedRecipeTitle = recipe['title'];
-                                  _titleController.text = recipe['title'];
-                                  _recipeSearchResults.clear();
-                                  _recipeSearchController.clear();
-                                });
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                  ],
-                ),
+                _buildMediaCarousel(isDarkMode),
+
+              const SizedBox(height: 24),
+              
+              // Recook Toggle
+              _buildRecookSection(isDarkMode),
+
+              const SizedBox(height: 20),
+
+              // Title Input
+              _buildSectionLabel('Judul Hidangan', Icons.title_rounded, isDarkMode),
+              const SizedBox(height: 8),
+              _buildModernTextField(
+                controller: _titleController,
+                hint: 'Misal: Nasi Goreng Spesial',
+                enabled: !_isRecook,
+                isDarkMode: isDarkMode,
+              ),
+
+              const SizedBox(height: 20),
+
+              // Caption Input
+              _buildSectionLabel('Caption', Icons.chat_bubble_outline_rounded, isDarkMode),
+              const SizedBox(height: 8),
+              _buildModernTextField(
+                controller: _captionController,
+                hint: lang.getText('upload_caption_hint'),
+                maxLines: 3,
+                isDarkMode: isDarkMode,
+              ),
+
+              const SizedBox(height: 20),
+
+              // Category Dropdown
+              _buildSectionLabel('Kategori', Icons.category_rounded, isDarkMode),
+              const SizedBox(height: 8),
+              _buildCategoryDropdown(isDarkMode),
             ],
+          ),
+        ),
+      ),
+    );
+  }
 
-            // Input Judul Hidangan
-            TextField(
-              controller: _titleController,
-              enabled: !_isRecook,
-              decoration: InputDecoration(
-                labelText: "Judul Hidangan",
-                hintText: "Misal: Nasi Goreng Spesial",
-                border: const OutlineInputBorder(),
-                filled: _isRecook,
-                fillColor: _isRecook 
-                    ? (Theme.of(context).brightness == Brightness.dark ? Colors.grey[800] : Colors.grey[200]) 
-                    : null,
+  Widget _buildSectionLabel(String label, IconData icon, bool isDarkMode) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: Colors.orange),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: isDarkMode ? Colors.grey.shade300 : Colors.grey.shade700,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyMediaPicker(bool isDarkMode, LanguageProvider lang) {
+    return GestureDetector(
+      onTap: () => _showMediaPicker(context),
+      child: Container(
+        height: 280,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDarkMode
+                ? [const Color(0xFF2A2520).withOpacity(0.5), const Color(0xFF1E1A18).withOpacity(0.3)]
+                : [Colors.orange.shade50.withOpacity(0.5), Colors.orange.shade100.withOpacity(0.3)],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.orange.withOpacity(0.3), width: 2, style: BorderStyle.solid),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [Color(0xFFE67E22), Color(0xFFD35400)]),
+                shape: BoxShape.circle,
+                boxShadow: [BoxShadow(color: Colors.orange.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 5))],
               ),
+              child: const Icon(Icons.add_photo_alternate_rounded, size: 40, color: Colors.white),
             ),
             const SizedBox(height: 16),
-
-            // Input Caption
-            TextField(
-              controller: _captionController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                hintText: lang.getText('upload_caption_hint'),
-                border: const OutlineInputBorder(),
-                focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.orange, width: 2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Dropdown Kategori
-            DropdownButtonFormField<String>(
-              value: _selectedCategory,
-              hint: const Text("Pilih Kategori"),
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-              ),
-              items: _categories.map((String category) {
-                return DropdownMenuItem<String>(
-                  value: category,
-                  child: Text(category),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedCategory = newValue;
-                });
-              },
-              validator: (value) => value == null ? 'Harap pilih kategori' : null,
-            ),
+            Text(lang.getText('upload_tap_hint'), style: TextStyle(color: isDarkMode ? Colors.grey.shade300 : Colors.grey.shade700, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 4),
+            Text('Maksimal 10 Slide (Foto/Video)', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
           ],
         ),
       ),
     );
   }
 
+  Widget _buildMediaCarousel(bool isDarkMode) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 280,
+          child: PageView.builder(
+            itemCount: _mediaItems.length,
+            itemBuilder: (context, index) {
+              final item = _mediaItems[index];
+              final file = item['file'] as File;
+              final type = item['type'] as String;
+
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 15, offset: const Offset(0, 5))],
+                ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: type == 'image'
+                          ? Image.file(file, fit: BoxFit.cover)
+                          : GestureDetector(
+                              onTap: () => _previewVideo(file),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  if (item['thumbnail'] != null)
+                                    Image.file(item['thumbnail'], fit: BoxFit.cover, width: double.infinity, height: double.infinity)
+                                  else
+                                    Container(color: Colors.black),
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(color: Colors.black.withOpacity(0.5), shape: BoxShape.circle),
+                                    child: const Icon(Icons.play_arrow_rounded, size: 40, color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                            ),
+                    ),
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: GestureDetector(
+                        onTap: () => _removeMedia(index),
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(color: Colors.red.withOpacity(0.9), shape: BoxShape.circle),
+                          child: const Icon(Icons.close_rounded, color: Colors.white, size: 18),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 12,
+                      right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(color: Colors.black.withOpacity(0.6), borderRadius: BorderRadius.circular(20)),
+                        child: Text('${index + 1}/${_mediaItems.length}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                    if (type == 'video')
+                      Positioned(
+                        top: 12,
+                        left: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFFE74C3C), Color(0xFFC0392B)]), borderRadius: BorderRadius.circular(20)),
+                          child: const Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.videocam_rounded, color: Colors.white, size: 14), SizedBox(width: 4), Text('Video', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600))]),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (_mediaItems.length < 10)
+          GestureDetector(
+            onTap: () => _showMediaPicker(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.orange.withOpacity(0.3))),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.add_rounded, size: 18, color: Colors.orange.shade600), const SizedBox(width: 6), Text('Tambah Slide', style: TextStyle(color: Colors.orange.shade600, fontWeight: FontWeight.w600))]),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildRecookSection(bool isDarkMode) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                child: Icon(Icons.restaurant_menu_rounded, color: Colors.blue.shade600, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Hasil masak dari resep ChefGenius?', style: TextStyle(fontWeight: FontWeight.w600, color: isDarkMode ? Colors.white : Colors.black87)),
+                  Text('Tandai untuk menautkan ke resep asli', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                ]),
+              ),
+              Transform.scale(
+                scale: 1.1,
+                child: Switch(
+                  value: _isRecook,
+                  onChanged: (val) {
+                    setState(() {
+                      _isRecook = val;
+                      if (!_isRecook) {
+                        _selectedRecipeId = null;
+                        _selectedRecipeTitle = null;
+                        _recipeSearchController.clear();
+                        _titleController.clear();
+                      }
+                    });
+                  },
+                  activeColor: Colors.orange,
+                ),
+              ),
+            ],
+          ),
+          if (_isRecook) ...[
+            const SizedBox(height: 16),
+            if (_selectedRecipeTitle != null)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(gradient: LinearGradient(colors: [Colors.orange.shade50, Colors.orange.shade100.withOpacity(0.5)]), borderRadius: BorderRadius.circular(12)),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle_rounded, color: Colors.green),
+                    const SizedBox(width: 10),
+                    Expanded(child: Text(_selectedRecipeTitle!, style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.orange))),
+                    IconButton(icon: const Icon(Icons.close_rounded, color: Colors.red, size: 20), onPressed: () => setState(() { _selectedRecipeId = null; _selectedRecipeTitle = null; _titleController.clear(); })),
+                  ],
+                ),
+              )
+            else
+              Column(
+                children: [
+                  _buildModernTextField(controller: _recipeSearchController, hint: 'Cari nama resep...', isDarkMode: isDarkMode, prefixIcon: Icons.search_rounded, suffixWidget: _isSearchingRecipe ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : null, onChanged: (val) { if (val.length > 2) _searchRecipes(val); }),
+                  if (_recipeSearchResults.isNotEmpty)
+                    Container(
+                      margin: const EdgeInsets.only(top: 8),
+                      constraints: const BoxConstraints(maxHeight: 180),
+                      decoration: BoxDecoration(color: isDarkMode ? const Color(0xFF2A2A2A) : Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 4))]),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey.withOpacity(0.2)),
+                        itemCount: _recipeSearchResults.length,
+                        itemBuilder: (context, index) {
+                          final recipe = _recipeSearchResults[index];
+                          return ListTile(
+                            leading: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.restaurant_rounded, color: Colors.orange, size: 20)),
+                            title: Text(recipe['title'], style: TextStyle(fontWeight: FontWeight.w500, color: isDarkMode ? Colors.white : Colors.black87)),
+                            onTap: () => setState(() { _selectedRecipeId = recipe['id']; _selectedRecipeTitle = recipe['title']; _titleController.text = recipe['title']; _recipeSearchResults.clear(); _recipeSearchController.clear(); }),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModernTextField({required TextEditingController controller, required String hint, bool enabled = true, int maxLines = 1, required bool isDarkMode, IconData? prefixIcon, Widget? suffixWidget, Function(String)? onChanged}) {
+    return Container(
+      decoration: BoxDecoration(color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))]),
+      child: TextField(
+        controller: controller,
+        enabled: enabled,
+        maxLines: maxLines,
+        onChanged: onChanged,
+        style: TextStyle(color: isDarkMode ? Colors.white : Colors.black87),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(color: Colors.grey.shade500),
+          prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: Colors.grey.shade500) : null,
+          suffixIcon: suffixWidget != null ? Padding(padding: const EdgeInsets.all(12), child: suffixWidget) : null,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+          filled: true,
+          fillColor: enabled ? (isDarkMode ? Colors.white.withOpacity(0.05) : Colors.grey.shade50) : (isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200),
+          contentPadding: const EdgeInsets.all(16),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryDropdown(bool isDarkMode) {
+    return Container(
+      decoration: BoxDecoration(color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))]),
+      child: DropdownButtonFormField<String>(
+        value: _selectedCategory,
+        hint: Text('Pilih Kategori', style: TextStyle(color: Colors.grey.shade500)),
+        decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none), filled: true, fillColor: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.grey.shade50, contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16)),
+        dropdownColor: isDarkMode ? const Color(0xFF2A2A2A) : Colors.white,
+        items: _categories.map((String category) {
+          IconData icon = category == 'Makanan' ? Icons.restaurant_rounded : category == 'Minuman' ? Icons.local_cafe_rounded : Icons.menu_book_rounded;
+          return DropdownMenuItem<String>(value: category, child: Row(children: [Icon(icon, size: 18, color: Colors.orange), const SizedBox(width: 10), Text(category)]));
+        }).toList(),
+        onChanged: (String? newValue) => setState(() => _selectedCategory = newValue),
+      ),
+    );
+  }
+
+
   void _showMediaPicker(BuildContext context) {
     final lang = context.read<LanguageProvider>();
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     showModalBottomSheet(
       context: context,
-      builder: (ctx) => Wrap(
-        children: [
-          ListTile(
-            leading: const Icon(Icons.camera_alt),
-            title: Text(lang.getText('upload_camera')),
-            onTap: () {
-              Navigator.pop(ctx);
-              _pickImage(ImageSource.camera);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.photo_library),
-            title: Text(lang.getText('upload_gallery')),
-            onTap: () {
-              Navigator.pop(ctx);
-              _pickImage(ImageSource.gallery);
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.videocam),
-            title: const Text("Ambil Video"),
-            onTap: () {
-              Navigator.pop(ctx);
-              _pickVideo(ImageSource.camera);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.video_library),
-            title: const Text("Pilih Video dari Galeri"),
-            onTap: () {
-              Navigator.pop(ctx);
-              _pickVideo(ImageSource.gallery);
-            },
-          ),
-        ],
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(colors: [Color(0xFFE67E22), Color(0xFFD35400)]),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.add_photo_alternate_rounded, color: Colors.white, size: 20),
+                  ),
+                  const SizedBox(width: 14),
+                  Text(
+                    'Pilih Media',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: isDarkMode ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 8),
+            
+            // Photo Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, bottom: 8),
+                    child: Row(
+                      children: [
+                        Icon(Icons.photo_rounded, size: 16, color: Colors.blue.shade400),
+                        const SizedBox(width: 6),
+                        Text('Foto', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey.shade500)),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildMediaOptionTile(
+                          icon: Icons.camera_alt_rounded,
+                          label: lang.getText('upload_camera'),
+                          gradient: const [Color(0xFF3498DB), Color(0xFF2980B9)],
+                          isDarkMode: isDarkMode,
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _pickImage(ImageSource.camera);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildMediaOptionTile(
+                          icon: Icons.photo_library_rounded,
+                          label: lang.getText('upload_gallery'),
+                          gradient: const [Color(0xFF9B59B6), Color(0xFF8E44AD)],
+                          isDarkMode: isDarkMode,
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _pickImage(ImageSource.gallery);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Video Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, bottom: 8),
+                    child: Row(
+                      children: [
+                        Icon(Icons.videocam_rounded, size: 16, color: Colors.red.shade400),
+                        const SizedBox(width: 6),
+                        Text('Video', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey.shade500)),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildMediaOptionTile(
+                          icon: Icons.videocam_rounded,
+                          label: 'Rekam Video',
+                          gradient: const [Color(0xFFE74C3C), Color(0xFFC0392B)],
+                          isDarkMode: isDarkMode,
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _pickVideo(ImageSource.camera);
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildMediaOptionTile(
+                          icon: Icons.video_library_rounded,
+                          label: 'Dari Galeri',
+                          gradient: const [Color(0xFFE67E22), Color(0xFFD35400)],
+                          isDarkMode: isDarkMode,
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _pickVideo(ImageSource.gallery);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMediaOptionTile({
+    required IconData icon,
+    required String label,
+    required List<Color> gradient,
+    required bool isDarkMode,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        decoration: BoxDecoration(
+          color: isDarkMode ? Colors.white.withOpacity(0.05) : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: gradient),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: gradient.first.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Icon(icon, color: Colors.white, size: 24),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isDarkMode ? Colors.grey.shade300 : Colors.grey.shade700,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }

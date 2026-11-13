@@ -14,6 +14,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../../app/config/routes.dart';
 import '../../../app/data/providers/language_provider.dart'; 
 import '../../../app/data/providers/generated_recipe_provider.dart'; 
+import '../../../app/widgets/modern_alert_dialog.dart';
 import '../../community/widgets/share_bottom_sheet.dart'; 
 import '../../community/widgets/save_collection_dialog.dart';
 import '../../community/widgets/report_dialog.dart';
@@ -572,61 +573,54 @@ class ProfileScreenState extends State<ProfileScreen> {
     return total;
   }
 
-  void _showLogoutDialog(BuildContext parentContext) {
+  void _showLogoutDialog(BuildContext parentContext) async {
     final lang = parentContext.read<LanguageProvider>();
-    showDialog(
+    
+    final confirm = await ModernAlertDialog.showConfirmation(
       context: parentContext,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(lang.getText('logout_confirm_title')),
-        content: Text(lang.getText('logout_confirm_desc')),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(lang.getText('cancel')),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              
-              if (parentContext.mounted) {
-                ScaffoldMessenger.of(parentContext).showSnackBar(
-                  SnackBar(
-                    content: Text(lang.getText('logout_wait')),
-                    duration: const Duration(seconds: 1),
-                  ),
-                );
-              }
-
-              try {
-                final recipeProvider = parentContext.read<GeneratedRecipeProvider>();
-                recipeProvider.clearData();
-                
-                // FIX: Reset notification provider before logout to prevent badge leaking to other accounts
-                parentContext.read<NotificationProvider>().reset();
-                
-                await supabase.auth.signOut().timeout(
-                  const Duration(seconds: 3),
-                  onTimeout: () {
-                    debugPrint("Logout timed out, forcing local logout");
-                  },
-                );
-              } catch (e) {
-                debugPrint("Logout error: $e");
-              } finally {
-                if (parentContext.mounted) {
-                  Navigator.pushNamedAndRemoveUntil(
-                    parentContext, 
-                    AppRoutes.loginRoute, 
-                    (route) => false
-                  );
-                }
-              }
-            },
-            child: Text(lang.getText('logout_btn'), style: const TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+      title: lang.getText('logout_confirm_title'),
+      message: lang.getText('logout_confirm_desc'),
+      confirmText: lang.getText('logout_btn'),
+      cancelText: lang.getText('cancel'),
+      icon: Icons.logout_rounded,
+      isDestructive: true,
     );
+    
+    if (confirm != true) return;
+    
+    if (parentContext.mounted) {
+      ScaffoldMessenger.of(parentContext).showSnackBar(
+        SnackBar(
+          content: Text(lang.getText('logout_wait')),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+    }
+
+    try {
+      final recipeProvider = parentContext.read<GeneratedRecipeProvider>();
+      recipeProvider.clearData();
+      
+      // FIX: Reset notification provider before logout to prevent badge leaking to other accounts
+      parentContext.read<NotificationProvider>().reset();
+      
+      await supabase.auth.signOut().timeout(
+        const Duration(seconds: 3),
+        onTimeout: () {
+          debugPrint("Logout timed out, forcing local logout");
+        },
+      );
+    } catch (e) {
+      debugPrint("Logout error: $e");
+    } finally {
+      if (parentContext.mounted) {
+        Navigator.pushNamedAndRemoveUntil(
+          parentContext, 
+          AppRoutes.loginRoute, 
+          (route) => false
+        );
+      }
+    }
   }
 
   void _showAvatarDialog() {
@@ -695,21 +689,33 @@ class ProfileScreenState extends State<ProfileScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: refresh,
+        color: Colors.orange,
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
               expandedHeight: 0,
               floating: true,
               pinned: true,
-              backgroundColor: backgroundColor,
+              backgroundColor: Theme.of(context).brightness == Brightness.dark 
+                  ? const Color(0xFF2A2520) 
+                  : const Color(0xFFFFF8F0),
               elevation: 0,
+              leading: Navigator.canPop(context) ? IconButton(
+                icon: Icon(
+                  Icons.arrow_back_rounded,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+                onPressed: () => Navigator.pop(context),
+              ) : null,
               title: Text(
                 _isOwnProfile
                     ? lang.getText('profile_title')
-                    : lang.getText('profile'),
+                    : (_fullName ?? _username ?? lang.getText('profile')),
                 style: TextStyle(
                   color: Theme.of(context).textTheme.bodyLarge?.color,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 20,
+                  letterSpacing: -0.3,
                 ),
               ),
               centerTitle: false,
@@ -717,19 +723,20 @@ class ProfileScreenState extends State<ProfileScreen> {
                 if (_isOwnProfile)
                   Builder(
                     builder: (context) => IconButton(
-                      icon: const Icon(Icons.menu_rounded),
+                      icon: Icon(
+                        Icons.menu_rounded,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
                       onPressed: () => Scaffold.of(context).openEndDrawer(),
                     ),
                   ),
               ],
             ),
-            // Tambahkan section Data Pribadi Anda
-            // Data Pribadi Anda section with email removed
             SliverToBoxAdapter(
               child: ProfileHeader(
                 fullName: _fullName,
                 username: _username,
-                email: '', // Jangan tampilkan email di header
+                email: '',
                 avatarUrl: _avatarUrl,
                 bio: _bio,
                 postCount: _userPosts.length,
@@ -743,14 +750,11 @@ class ProfileScreenState extends State<ProfileScreen> {
                 onShowAvatar: _showAvatarDialog,
               ),
             ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              sliver: ProfilePostsGrid(
-                posts: _userPosts,
-                isLoading: _isLoadingPosts,
-                isMyPost: _isOwnProfile,
-                onPostTap: (post) => _showPostDetail(post, _isOwnProfile),
-              ),
+            ProfilePostsGrid(
+              posts: _userPosts,
+              isLoading: _isLoadingPosts,
+              isMyPost: _isOwnProfile,
+              onPostTap: (post) => _showPostDetail(post, _isOwnProfile),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 20)),
           ],

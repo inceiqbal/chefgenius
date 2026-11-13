@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
@@ -17,6 +18,20 @@ class GeminiProxyService {
 
   final _supabase = Supabase.instance.client;
   static const _uuid = Uuid();
+  String? _appVersion;
+
+  Future<String?> _getAppVersion() async {
+    if (_appVersion != null) return _appVersion;
+    try {
+      final info = await PackageInfo.fromPlatform();
+      _appVersion = info.buildNumber.isEmpty
+          ? info.version
+          : '${info.version}+${info.buildNumber}';
+    } catch (e) {
+      debugPrint('GeminiProxy: Gagal membaca versi aplikasi - $e');
+    }
+    return _appVersion;
+  }
 
   static const Duration _defaultTimeout = Duration(seconds: 30);
   static const bool _pollingEnabled = false;
@@ -134,15 +149,21 @@ Aturan:
     String? recipeDescription,
     String ragMode = 'advanced',
     String embeddingEngine = 'indobert',
+    String bgePassageMode = 'citation_plus_content',
     bool isEvaluation = false,
     String? clientRequestId,
+    String? sessionId,
   }) async {
+    final appVersion = await _getAppVersion();
     final result = await _callProxy(
       'chatbot',
       {
         'userMessage': userMessage,
         'rag_mode': ragMode,
         'embedding_engine': embeddingEngine,
+        'bge_passage_mode': bgePassageMode,
+        if (sessionId != null) 'session_id': sessionId,
+        if (appVersion != null) 'app_version': appVersion,
         'contextData': {
           'pantryItems': pantryItems,
           'dietPreferences': dietPreferences,

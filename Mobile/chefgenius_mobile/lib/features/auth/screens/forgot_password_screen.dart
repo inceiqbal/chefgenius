@@ -104,85 +104,273 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // WATCH PROVIDER
     final lang = context.watch<LanguageProvider>();
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(lang.getText('forgot_pass_title')), // Dinamis
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 20),
-                Image.asset('assets/images/icon_chefgenius.png', height: 80),
-                const SizedBox(height: 16),
-                Text(
-                  lang.getText('forgot_pass_header'), // Dinamis
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDarkMode
+                ? [const Color(0xFF1A1A2E), const Color(0xFF16213E)]
+                : [const Color(0xFFFFF8F0), const Color(0xFFFFE8D6)],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Modern AppBar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8),
+                          ],
+                        ),
+                        child: Icon(Icons.arrow_back_ios_new_rounded, 
+                          color: isDarkMode ? Colors.white : Colors.black87, size: 20),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  lang.getText('forgot_pass_desc'), // Dinamis
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 16),
-                ),
-                const SizedBox(height: 32),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: lang.getText('email_label'), // Reuse
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.email_outlined),
+              ),
+              
+              // Content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 20),
+                        
+                        // Icon
+                        Center(
+                          child: Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: isDarkMode 
+                                  ? Colors.white.withOpacity(0.1)
+                                  : Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFE67E22).withOpacity(0.3),
+                                  blurRadius: 30,
+                                  spreadRadius: 5,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.lock_reset_rounded,
+                              size: 60,
+                              color: Color(0xFFE67E22),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        
+                        // Title
+                        Text(
+                          lang.getText('forgot_pass_header'),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          lang.getText('forgot_pass_desc'),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                        
+                        // Email Field
+                        _buildModernTextField(
+                          controller: _emailController,
+                          label: lang.getText('email_label'),
+                          hint: 'contoh@email.com',
+                          icon: Icons.email_rounded,
+                          isDarkMode: isDarkMode,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return lang.getText('email_empty');
+                            }
+                            if (!value.contains('@') || !value.contains('.')) {
+                              return lang.getText('email_invalid');
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 32),
+                        
+                        // Submit Button
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: (_isLoading || _isCooldown) 
+                                ? null
+                                : const LinearGradient(
+                                    colors: [Color(0xFFE67E22), Color(0xFFD35400)],
+                                  ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: (_isLoading || _isCooldown) ? null : [
+                              BoxShadow(
+                                color: const Color(0xFFE67E22).withOpacity(0.4),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            onPressed: (_isLoading || _isCooldown) ? null : () async {
+                              await _handleForgotPassword();
+                              _startCooldown();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: (_isLoading || _isCooldown) ? Colors.grey : Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 22,
+                                    width: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : _isCooldown
+                                    ? Text(
+                                        'Tunggu $_cooldown detik...',
+                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                                      )
+                                    : Text(
+                                        lang.getText('send_reset_btn'),
+                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                                      ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        
+                        // Back to login
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Ingat password? ',
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                            GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Text(
+                                lang.getText('back_to_login_btn'),
+                                style: const TextStyle(
+                                  color: Color(0xFFE67E22),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return lang.getText('email_empty'); // Reuse
-                    }
-                    if (!value.contains('@') || !value.contains('.')) {
-                      return lang.getText('email_invalid'); // Reuse
-                    }
-                    return null;
-                  },
                 ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: (_isLoading || _isCooldown) ? null : () async {
-                    await _handleForgotPassword();
-                    _startCooldown();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: Colors.white))
-                      : _isCooldown
-                          ? Text('Tunggu $_cooldown detik...')
-                          : Text(lang.getText('send_reset_btn')), // Dinamis
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => Navigator.pop(context), 
-                  child: Text(lang.getText('back_to_login_btn')), // Dinamis
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildModernTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    required bool isDarkMode,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: isDarkMode ? Colors.white70 : Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          validator: validator,
+          style: TextStyle(color: isDarkMode ? Colors.white : Colors.black87),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(color: Colors.grey.shade400),
+            prefixIcon: Container(
+              margin: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE67E22).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: const Color(0xFFE67E22), size: 20),
+            ),
+            filled: true,
+            fillColor: isDarkMode 
+                ? Colors.white.withOpacity(0.05)
+                : Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: Color(0xFFE67E22), width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: Colors.redAccent),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
+        ),
+      ],
     );
   }
 }

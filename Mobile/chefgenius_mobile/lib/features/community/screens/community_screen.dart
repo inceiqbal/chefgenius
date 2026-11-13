@@ -502,6 +502,99 @@ class CommunityScreenState extends State<CommunityScreen> with SanctionMixin {
     );
   }
 
+  // Modern Empty State
+  Widget _buildModernEmptyState(BuildContext context, LanguageProvider lang, bool isDarkMode) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Animated icon container
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.9, end: 1.0),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.elasticOut,
+              builder: (context, value, child) {
+                return Transform.scale(scale: value, child: child);
+              },
+              child: Container(
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isDarkMode
+                        ? [const Color(0xFF2A2520).withOpacity(0.5), const Color(0xFF1E1A18).withOpacity(0.3)]
+                        : [Colors.orange.shade50, Colors.orange.shade100.withOpacity(0.5)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.orange.withOpacity(0.1),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.photo_camera_rounded, size: 50, color: Colors.orange),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              lang.getText('comm_empty'),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                color: isDarkMode ? Colors.grey.shade300 : Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Ayo mulai berbagi masakan pertamamu! 🍳',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: isDarkMode ? Colors.grey.shade500 : Colors.grey.shade500,
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Food emojis decoration
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 10,
+              children: ['📸', '🍽️', '👨‍🍳', '🍕', '🥗'].map((emoji) {
+                return TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: Duration(milliseconds: 400 + (emoji.hashCode % 300)),
+                  curve: Curves.bounceOut,
+                  builder: (context, value, child) {
+                    return Opacity(
+                      opacity: value,
+                      child: Transform.translate(
+                        offset: Offset(0, 15 * (1 - value)),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(emoji, style: const TextStyle(fontSize: 20)),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isOffline = context.watch<ConnectivityProvider>().isOffline;
@@ -537,105 +630,113 @@ class CommunityScreenState extends State<CommunityScreen> with SanctionMixin {
         sanctionEndTime: sanctionEndTime,
         remainingTime: formatRemainingTime(),
       ),
-      body: Column(
-        children: [
-          const OfflineBanner(),
-          
-          if (!isOffline) const CommunityFilterBar(),
-
-          Expanded(
-            child: isOffline 
-              ? Center(child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.wifi_off, size: 60, color: Colors.grey),
-                    const SizedBox(height: 16),
-                    Text(lang.getText('comm_offline_title'), style: const TextStyle(color: Colors.grey)),
-                    const SizedBox(height: 8),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      ),
-                      onPressed: () => context.read<CommunityProvider>().refreshPosts(), 
-                      child: Text(lang.getText('comm_retry'))
-                    )
-                  ],
-                ))
-              : RefreshIndicator(
-                  onRefresh: () => context.read<CommunityProvider>().refreshPosts(),
-                  color: Colors.orange,
-                  backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
-                  child: Consumer<CommunityProvider>(
-                    builder: (context, provider, child) {
-                      return provider.isLoading 
-                        ? const Center(child: CircularProgressIndicator(color: Colors.orange))
-                        : provider.posts.isEmpty && provider.users.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(20),
-                                    decoration: BoxDecoration(
-                                      color: isDarkMode ? Colors.orange.withValues(alpha: 0.1) : Colors.orange.shade50,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(Icons.camera_alt_outlined, size: 60, color: Colors.orange),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    lang.getText('comm_empty'), 
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w500),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : ListView.builder(
-                              controller: _scrollController,
-                              padding: const EdgeInsets.only(bottom: 80, top: 8),
-                              itemCount: provider.posts.length + (provider.hasMore ? 1 : 0) + (provider.users.isNotEmpty ? 1 : 0),
-                              itemBuilder: (context, index) {
-                                if (provider.users.isNotEmpty) {
-                                  if (index == 0) {
-                                    return _buildUserSearchResults(provider.users);
-                                  }
-                                  index--;
-                                }
-
-                                if (index == provider.posts.length) {
-                                  return const Padding(
-                                    padding: EdgeInsets.all(16.0),
-                                    child: Center(child: CircularProgressIndicator(color: Colors.orange)),
-                                  );
-                                }
-                                return PostCard(
-                                  post: provider.posts[index],
-                                  index: index,
-                                  onLike: _toggleLike,
-                                  onSave: _toggleSave,
-                                  onShare: _sharePost,
-                                  onOptions: _showPostOptions,
-                                  onRecookTap: _navigateToRecipe,
-                                  onCommentTap: (postId) {
-                                    Navigator.pushNamed(
-                                      context, 
-                                      AppRoutes.commentsRoute,
-                                      arguments: postId,
-                                    );
-                                  },
-                                  onLikesTap: _showLikesList,
-                                  formatTime: _formatPostTime,
-                                );
-                              },
-                            );
-                    },
-                  ),
-              ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDarkMode
+                ? [const Color(0xFF1A1A2E), const Color(0xFF16213E), const Color(0xFF0F0F1A)]
+                : [const Color(0xFFFFF8F0), const Color(0xFFFFF5EB), const Color(0xFFFFFFFF)],
           ),
-        ],
+        ),
+        child: Column(
+          children: [
+            const OfflineBanner(),
+            
+            if (!isOffline) const CommunityFilterBar(),
+
+            Expanded(
+              child: isOffline 
+                ? Center(child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.wifi_off_rounded, size: 50, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(lang.getText('comm_offline_title'), style: const TextStyle(color: Colors.grey, fontSize: 16)),
+                      const SizedBox(height: 12),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFE67E22), Color(0xFFD35400)],
+                          ),
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(25),
+                            onTap: () => context.read<CommunityProvider>().refreshPosts(),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              child: Text(lang.getText('comm_retry'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ))
+                : RefreshIndicator(
+                    onRefresh: () => context.read<CommunityProvider>().refreshPosts(),
+                    color: Colors.orange,
+                    backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                    child: Consumer<CommunityProvider>(
+                      builder: (context, provider, child) {
+                        return provider.isLoading 
+                          ? const Center(child: CircularProgressIndicator(color: Colors.orange))
+                          : provider.posts.isEmpty && provider.users.isEmpty
+                            ? _buildModernEmptyState(context, lang, isDarkMode)
+                            : ListView.builder(
+                                controller: _scrollController,
+                                padding: const EdgeInsets.only(bottom: 80, top: 8),
+                                itemCount: provider.posts.length + (provider.hasMore ? 1 : 0) + (provider.users.isNotEmpty ? 1 : 0),
+                                itemBuilder: (context, index) {
+                                  if (provider.users.isNotEmpty) {
+                                    if (index == 0) {
+                                      return _buildUserSearchResults(provider.users);
+                                    }
+                                    index--;
+                                  }
+
+                                  if (index == provider.posts.length) {
+                                    return const Padding(
+                                      padding: EdgeInsets.all(16.0),
+                                      child: Center(child: CircularProgressIndicator(color: Colors.orange)),
+                                    );
+                                  }
+                                  return PostCard(
+                                    post: provider.posts[index],
+                                    index: index,
+                                    onLike: _toggleLike,
+                                    onSave: _toggleSave,
+                                    onShare: _sharePost,
+                                    onOptions: _showPostOptions,
+                                    onRecookTap: _navigateToRecipe,
+                                    onCommentTap: (postId) {
+                                      Navigator.pushNamed(
+                                        context, 
+                                        AppRoutes.commentsRoute,
+                                        arguments: postId,
+                                      );
+                                    },
+                                    onLikesTap: _showLikesList,
+                                    formatTime: _formatPostTime,
+                                  );
+                                },
+                              );
+                      },
+                    ),
+                  ),
+            ),
+          ],
+        ),
       ),
     );
   }

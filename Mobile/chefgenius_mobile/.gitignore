@@ -46,8 +46,12 @@ app.*.map.json
 
 # File rahasia - JANGAN COMMIT!
 .env
+*.env
+*.env.*
+dart_defines.env
 dart_defines.json
 dart_defines.*.json
+working_gemini_keys.json
 
 # Firebase config (contains API keys)
 # Buat template: google-services.json.example
@@ -71,3 +75,14 @@ dataset/
 
 # Cache Supabase CLI
 supabase/.temp/
+
+# Node modules
+node_modules/
+**/node_modules/
+
+# Local folders & temporary files
+scratch/
+Dokumen_Knowledge_Base_Untuk_Dosen/
+brief/
+jurnal/
+.vscode/

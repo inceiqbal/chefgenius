@@ -30,6 +30,7 @@ import '../../features/community/screens/saved_posts_screen.dart';
 import '../../features/community/screens/likes_list_screen.dart';
 import '../../features/community/screens/post_detail_screen.dart';
 import '../../features/admin/screens/admin_dashboard_screen.dart';
+import '../../features/chatbot/screens/chatbot_screen.dart';
 
 class AppRoutes {
   static const String splashRoute = '/';
@@ -56,6 +57,7 @@ class AppRoutes {
   static const String shoppingListRoute = '/shopping-list';
   static const String historyRoute = '/history';
   static const String introCeiRoute = '/intro-cei';
+  static const String chatbotRoute = '/chatbot'; // Chatbot konsultasi kuliner
 
   // RUTE MEDSOS
   static const String communityRoute = '/community';
@@ -222,6 +224,10 @@ class AppRoutes {
 
       case adminDashboardRoute:
         return MaterialPageRoute(builder: (_) => const AdminDashboardScreen());
+
+      case chatbotRoute:
+        final recipe = settings.arguments as Recipe?;
+        return MaterialPageRoute(builder: (_) => ChatbotScreen(initialRecipe: recipe));
 
       default:
         return MaterialPageRoute(builder: (_) => const SplashScreen());

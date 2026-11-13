@@ -1,0 +1,140 @@
+@startuml ChefGenius_Integration_Architecture
+
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam roundCorner 10
+skinparam shadowing false
+
+title ChefGenius Chatbot - Integration Architecture\n(LLMOps Flow)
+
+' Define actors and components
+actor "User" as user
+participant "Flutter App\n(ChefGenius)" as flutter #LightBlue
+participant "ChatbotService" as chatbot #LightGreen
+participant "GeminiProxyService" as proxy #LightGreen
+participant "Supabase\nEdge Function\n(gemini-proxy)" as edge #Orange
+database "Supabase\nPostgreSQL" as db #LightYellow
+participant "Google\nGemini API" as gemini #Pink
+storage "Supabase\nStorage" as storage #LightGray
+
+' Main flow
+== User Sends Message ==
+
+user -> flutter : Send chat message
+activate flutter
+flutter -> chatbot : sendMessageStream(message)
+activate chatbot
+
+note right of chatbot
+  **Context Collection**
+  - Pantry items (Hive)
+  - Diet preferences (SharedPrefs)
+  - Allergies
+  - Current recipe (optional)
+end note
+
+chatbot -> proxy : sendChatMessage(\n  userMessage,\n  contextData\n)
+activate proxy
+
+proxy -> edge : POST /functions/v1/gemini-proxy\n{action: "chatbot", ...}
+activate edge
+
+== LLMOps Processing ==
+
+note right of edge #FFEEEE
+  **1. Generate run_id (UUID v4)**
+  **2. Build system prompt**
+  **3. Compute prompt_hash (SHA-256)**
+end note
+
+edge -> db : INSERT chatbot_telemetry\n(run_id, prompt_id, prompt_hash, ...)
+activate db
+db --> edge : OK
+deactivate db
+
+edge -> gemini : generateContent(\n  systemPrompt,\n  config\n)
+activate gemini
+
+note right of gemini
+  **Model**: gemini-3-flash-preview
+  **Temperature**: 0.4
+  **MaxTokens**: 1024-8192
+end note
+
+gemini --> edge : Response\n(text, tokenUsage, finishReason)
+deactivate gemini
+
+== Safety Post-Processing ==
+
+note right of edge #FFFFEE
+  **Safety Rules Applied:**
+  1. Block diagnosis/medication keywords
+  2. Check allergy contradictions
+  3. Add disclaimer if health-related
+  4. Normalize units (gr → gram)
+end note
+
+alt Safety Flag = true
+  edge -> db : INSERT review_queue\n(run_id, flag_reason, status='pending')
+  activate db
+  db --> edge : OK
+  deactivate db
+end
+
+alt Storage Bucket Available
+  edge -> storage : Upload response.txt
+  activate storage
+  storage --> edge : response_pointer
+  deactivate storage
+else No Storage Bucket
+  note right of edge
+    Store response_text inline
+  end note
+end
+
+edge -> db : UPDATE chatbot_telemetry\n(token_usage, latency_ms,\n safety_flag, response_pointer, ...)
+activate db
+db --> edge : OK
+deactivate db
+
+edge --> proxy : JSON Response\n{run_id, result, safety_flag, safety_reasons}
+deactivate edge
+
+proxy --> chatbot : Parsed response text
+deactivate proxy
+
+chatbot -> db : INSERT chat_messages\n(user message + bot response)
+activate db
+db --> chatbot : OK
+deactivate db
+
+chatbot --> flutter : Stream response\n(typing animation)
+deactivate chatbot
+
+flutter --> user : Display response
+deactivate flutter
+
+== Observability & Review ==
+
+note over db
+  **chatbot_metrics_daily View**
+  - total_requests
+  - safety_pass_rate
+  - p50/p95/p99 latency
+  - error_rate
+end note
+
+actor "Reviewer\n(Ahli Gizi)" as reviewer
+reviewer -> db : Query review_queue\n(status='pending')
+activate db
+db --> reviewer : Flagged responses
+deactivate db
+
+reviewer -> db : UPDATE review_queue\n(status, reviewer_decision, comments)
+activate db
+db --> reviewer : OK
+deactivate db
+
+@enduml

@@ -42,26 +42,72 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
   @override
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
+      backgroundColor: isDarkMode ? const Color(0xFF121212) : const Color(0xFFFAFAFA),
       appBar: AppBar(
-        title: Text(lang.getText('notif_title'), style: const TextStyle(fontWeight: FontWeight.bold)),
+        elevation: 0,
+        backgroundColor: isDarkMode ? const Color(0xFF1A1A2E) : const Color(0xFFFFF8F0),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_rounded, color: isDarkMode ? Colors.white : Colors.black87),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [Color(0xFFE74C3C), Color(0xFFC0392B)]),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(color: const Color(0xFFE74C3C).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2)),
+                ],
+              ),
+              child: const Icon(Icons.notifications_rounded, color: Colors.white, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              lang.getText('notif_title'),
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.w800,
+                fontSize: 20,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ],
+        ),
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.orange,
-          unselectedLabelColor: Colors.grey,
+          unselectedLabelColor: isDarkMode ? Colors.grey.shade500 : Colors.grey.shade600,
           indicatorColor: Colors.orange,
+          indicatorWeight: 3,
+          labelStyle: const TextStyle(fontWeight: FontWeight.w600),
           tabs: [
             Tab(text: lang.getText('notif_tab_activity')),
             Tab(text: lang.getText('notif_tab_inbox')),
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: const [
-          _NotificationList(type: 'social'),
-          _NotificationList(type: 'system'),
-        ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDarkMode
+                ? [const Color(0xFF1A1A2E), const Color(0xFF121212)]
+                : [const Color(0xFFFFF8F0), const Color(0xFFFAFAFA)],
+          ),
+        ),
+        child: TabBarView(
+          controller: _tabController,
+          children: const [
+            _NotificationList(type: 'social'),
+            _NotificationList(type: 'system'),
+          ],
+        ),
       ),
     );
   }
@@ -546,55 +592,144 @@ class _NotificationListState extends State<_NotificationList> {
           trailingWidget = null;
         }
 
+        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        final iconColor = _getIconColor(type);
+
         return Container(
-          color: isRead ? Colors.transparent : Colors.orange.withOpacity(0.1),
-          child: ListTile(
-            leading: Stack(
-              children: [
-                CircleAvatar(
-                  backgroundColor: Colors.grey.shade200,
-                  backgroundImage: avatarImage,
-                  child: avatarImage == null
-                      ? const Icon(Icons.person, color: Colors.grey)
-                      : null,
-                ),
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: isRead 
+                ? (isDarkMode ? Colors.white.withOpacity(0.03) : Colors.white)
+                : (isDarkMode ? Colors.orange.withOpacity(0.08) : Colors.orange.shade50),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(isDarkMode ? 0.15 : 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => _handleNotificationTap(notif),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    // Avatar with icon badge - TAPPABLE to view profile
+                    GestureDetector(
+                      onTap: () {
+                        final actorId = notif['actor_id'];
+                        if (actorId != null) {
+                          Navigator.pushNamed(context, AppRoutes.profileRoute, arguments: {'userId': actorId.toString()});
+                        }
+                      },
+                      child: Stack(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isRead ? Colors.grey.withOpacity(0.3) : iconColor.withOpacity(0.5),
+                                width: 2,
+                              ),
+                            ),
+                            child: CircleAvatar(
+                              radius: 22,
+                              backgroundColor: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200,
+                              backgroundImage: avatarImage,
+                              child: avatarImage == null
+                                  ? Icon(Icons.person_rounded, color: Colors.grey.shade400, size: 22)
+                                  : null,
+                            ),
+                          ),
+                          Positioned(
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: iconColor,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white, width: 2),
+                              ),
+                              child: Icon(_getIcon(type), size: 10, color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Icon(
-                      _getIcon(type),
-                      size: 14,
-                      color: _getIconColor(type),
+                    const SizedBox(width: 12),
+                    // Content
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          RichText(
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            text: TextSpan(
+                              style: TextStyle(
+                                color: isDarkMode ? Colors.white : Colors.black87,
+                                fontSize: 14,
+                              ),
+                              children: [
+                                WidgetSpan(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      final actorId = notif['actor_id'];
+                                      if (actorId != null) {
+                                        Navigator.pushNamed(context, AppRoutes.profileRoute, arguments: {'userId': actorId.toString()});
+                                      }
+                                    },
+                                    child: Text(
+                                      actor != null ? (actor['username'] ?? lang.getText('notif_someone')) : lang.getText('notif_system'),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: isDarkMode ? Colors.white : Colors.black87,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const TextSpan(text: ' '),
+                                TextSpan(text: _translateMessage(notif['message'], lang)),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            timeago.format(DateTime.parse(notif['created_at']).toLocal(), locale: 'id'),
+                            style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                    if (trailingWidget != null) ...[
+                      const SizedBox(width: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: SizedBox(width: 48, height: 48, child: trailingWidget),
+                      ),
+                    ],
+                    if (!isRead)
+                      Container(
+                        margin: const EdgeInsets.only(left: 8),
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Colors.orange,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                  ],
                 ),
-              ],
-            ),
-            title: RichText(
-              text: TextSpan(
-                style: DefaultTextStyle.of(context).style,
-                children: [
-                  TextSpan(
-                    text: actor != null ? (actor['username'] ?? lang.getText('notif_someone')) : lang.getText('notif_system'),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const TextSpan(text: ' '),
-                  TextSpan(text: _translateMessage(notif['message'], lang)),
-                ],
               ),
             ),
-            subtitle: Text(
-              timeago.format(DateTime.parse(notif['created_at']).toLocal(), locale: 'id'),
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-            trailing: trailingWidget,
-            onTap: () => _handleNotificationTap(notif),
           ),
         );
       },

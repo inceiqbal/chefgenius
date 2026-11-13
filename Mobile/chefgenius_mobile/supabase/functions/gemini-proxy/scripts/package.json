@@ -1,0 +1,26 @@
+{
+  "name": "scripts",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "eval:rag": "node evaluate_rag_retrieval.js",
+    "eval:comprehensive": "node evaluate_comprehensive.js",
+    "eval:stepwise": "node run_rag_eval_stepwise.js",
+    "eval:ragas": "node evaluate_ragas.js",
+    "eval:interrater": "node calculate_interrater_reliability.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@langchain/textsplitters": "^0.1.0",
+    "@supabase/supabase-js": "^2.78.0",
+    "@types/node": "^25.2.3",
+    "dotenv": "^17.2.4",
+    "pdf-parse": "^1.1.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "description": ""
+}

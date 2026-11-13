@@ -432,6 +432,184 @@ class _GenerateRecipeScreenState extends State<GenerateRecipeScreen> {
     super.dispose();
   }
 
+  // Modern AI Header Section
+  Widget _buildAiHeader(BuildContext context, LanguageProvider lang) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: isDarkMode
+              ? [const Color(0xFF2A2520), const Color(0xFF1E1A18)]
+              : [const Color(0xFFFFE5D9), const Color(0xFFFFF0E5)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.orange.withOpacity(isDarkMode ? 0.2 : 0.15),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.orange.withOpacity(0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // AI Icon with glow effect
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFE67E22), Color(0xFFD35400)],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFE67E22).withOpacity(0.25),
+                  blurRadius: 12,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.auto_awesome, color: Colors.white, size: 32),
+          ),
+          const SizedBox(width: 16),
+          // Text content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Chef AI',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  lang.getText('gen_header_subtitle') != 'gen_header_subtitle' 
+                      ? lang.getText('gen_header_subtitle')
+                      : 'Buat resep unik dengan AI 🤖✨',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Sparkle decoration
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.orange.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Text('✨', style: TextStyle(fontSize: 20)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Modern Empty State Widget
+  Widget _buildModernEmptyState(BuildContext context, LanguageProvider lang) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            // Animated Container with Chef Image
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.9, end: 1.0),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.elasticOut,
+              builder: (context, value, child) {
+                return Transform.scale(scale: value, child: child);
+              },
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isDarkMode
+                        ? [const Color(0xFF2A2520).withOpacity(0.5), const Color(0xFF1E1A18).withOpacity(0.3)]
+                        : [Colors.orange.shade50, Colors.orange.shade100.withOpacity(0.5)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.orange.withOpacity(0.1),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Image.asset(
+                  ChefCeiAssets.kosong,
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Title
+            Text(
+              lang.getText('gen_empty_state'),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: isDarkMode ? Colors.grey.shade300 : Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Decorative emojis
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 12,
+              children: ['🍳', '🥘', '🍲', '🍜', '🥗'].map((emoji) {
+                return TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: Duration(milliseconds: 400 + (emoji.hashCode % 300)),
+                  curve: Curves.bounceOut,
+                  builder: (context, value, child) {
+                    return Opacity(
+                      opacity: value,
+                      child: Transform.translate(
+                        offset: Offset(0, 20 * (1 - value)),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(emoji, style: const TextStyle(fontSize: 22)),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>();
@@ -515,17 +693,30 @@ class _GenerateRecipeScreenState extends State<GenerateRecipeScreen> {
               ),
             ],
           ),
-          body: Column(
-            children: [
-              const OfflineBanner(),
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // 1. PROMPT INPUT
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: Theme.of(context).brightness == Brightness.dark
+                    ? [const Color(0xFF1A1A2E), const Color(0xFF16213E), const Color(0xFF0F0F1A)]
+                    : [const Color(0xFFFFF8F0), const Color(0xFFFFF5EB), const Color(0xFFFFFFFF)],
+              ),
+            ),
+            child: Column(
+              children: [
+                const OfflineBanner(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Header Section dengan AI Branding
+                        _buildAiHeader(context, lang),
+                        const SizedBox(height: 20),
+                        // 1. PROMPT INPUT
                       PromptInputSection(
                         showcaseKey: _promptKey,
                         controller: _promptController,
@@ -585,25 +776,52 @@ class _GenerateRecipeScreenState extends State<GenerateRecipeScreen> {
 
                       // INFO BOX
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Theme.of(context).colorScheme.primaryContainer)),
+                          gradient: LinearGradient(
+                            colors: Theme.of(context).brightness == Brightness.dark
+                                ? [const Color(0xFF1E3A5F), const Color(0xFF1A2E4A)]
+                                : [const Color(0xFFE8F4FD), const Color(0xFFF0F7FF)],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.blue.withOpacity(0.3)
+                                : Colors.blue.withOpacity(0.2),
+                          ),
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(lang.getText('gen_info_box_title'),
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(Icons.tips_and_updates_rounded, color: Colors.blue, size: 18),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  lang.getText('gen_info_box_title'),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
                             RichText(
                               text: TextSpan(
-                                style: Theme.of(context).textTheme.bodySmall,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.6),
                                 children: [
-                                  const TextSpan(text: "• "),
+                                  const TextSpan(text: "✦ "),
                                   TextSpan(text: lang.getText('gen_info_bullet_1'), style: const TextStyle(fontWeight: FontWeight.bold)),
                                   TextSpan(text: lang.getText('gen_info_text_1')),
-                                  const TextSpan(text: "• "),
+                                  const TextSpan(text: "\n✦ "),
                                   TextSpan(text: lang.getText('gen_info_bullet_2'), style: const TextStyle(fontWeight: FontWeight.bold)),
                                   TextSpan(text: lang.getText('gen_info_text_2')),
                                 ],
@@ -630,29 +848,14 @@ class _GenerateRecipeScreenState extends State<GenerateRecipeScreen> {
                           },
                         )
                       else if (!isGenerating)
-                        Center(
-                          child: Column(
-                            children: [
-                              Image.asset(
-                                ChefCeiAssets.kosong,
-                                width: 150,
-                                fit: BoxFit.contain,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                lang.getText('gen_empty_state'),
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontSize: 16, color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                        ),
+                        _buildModernEmptyState(context, lang),
                     ],
                   ),
                 ),
               ),
             ],
           ),
+        ),
         );
       }
     );

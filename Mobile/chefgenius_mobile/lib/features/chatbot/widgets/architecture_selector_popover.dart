@@ -35,6 +35,7 @@ void showArchitectureSelectorPopover({
       return StatefulBuilder(
         builder: (context, setMenuState) {
           final isPureLlm = chatbotService.ragMode == 'none';
+          final isRerankerActive = chatbotService.ragMode == 'post_retrieval' || chatbotService.ragMode == 'advanced';
 
           return Stack(
             children: [
@@ -140,7 +141,7 @@ void showArchitectureSelectorPopover({
                                 dialogContext: dialogContext,
                                 chatbotService: chatbotService,
                                 mode: 'none',
-                                title: 'Pure LLM (Baseline)',
+                                title: 'Baseline',
                                 subtitle: 'Gemini direct tanpa retrieval context',
                                 icon: Icons.bolt_rounded,
                                 accentColor: const Color(0xFF64748B),
@@ -261,6 +262,75 @@ void showArchitectureSelectorPopover({
                                         title: 'IndoBERT',
                                         dimensions: '768 dim',
                                         accentColor: const Color(0xFFD97706),
+                                        isDarkMode: isDarkMode,
+                                        setMenuState: setMenuState,
+                                        onConfigurationChanged: onConfigurationChanged,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Text(
+                                    'BGE PASSAGE MODE',
+                                    style: TextStyle(
+                                      fontSize: 9.5,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.8,
+                                      color: isDarkMode ? Colors.white38 : const Color(0xFF94A3B8),
+                                    ),
+                                  ),
+                                  if (!isRerankerActive) ...[
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                      decoration: BoxDecoration(
+                                        color: Colors.amber.withValues(alpha: isDarkMode ? 0.15 : 0.1),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: const Text(
+                                        'STANDBY',
+                                        style: TextStyle(
+                                          fontSize: 7.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.amber,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Opacity(
+                                opacity: !isRerankerActive ? 0.45 : 1.0,
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: _buildPassageCard(
+                                        parentContext: context,
+                                        dialogContext: dialogContext,
+                                        chatbotService: chatbotService,
+                                        mode: 'citation_plus_content',
+                                        title: 'Citation + Text',
+                                        tag: 'Judul + Isi',
+                                        accentColor: const Color(0xFF8B5CF6),
+                                        isDarkMode: isDarkMode,
+                                        setMenuState: setMenuState,
+                                        onConfigurationChanged: onConfigurationChanged,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: _buildPassageCard(
+                                        parentContext: context,
+                                        dialogContext: dialogContext,
+                                        chatbotService: chatbotService,
+                                        mode: 'content_only',
+                                        title: 'Content Only',
+                                        tag: 'Isi Saja',
+                                        accentColor: const Color(0xFF0EA5E9),
                                         isDarkMode: isDarkMode,
                                         setMenuState: setMenuState,
                                         onConfigurationChanged: onConfigurationChanged,
@@ -526,6 +596,100 @@ Widget _buildEngineCard({
     ),
   ),
 );
+}
+
+Widget _buildPassageCard({
+  required BuildContext parentContext,
+  required BuildContext dialogContext,
+  required ChatbotService chatbotService,
+  required String mode,
+  required String title,
+  required String tag,
+  required Color accentColor,
+  required bool isDarkMode,
+  required StateSetter setMenuState,
+  required VoidCallback onConfigurationChanged,
+}) {
+  final isSelected = chatbotService.bgePassageMode == mode;
+  final cardBg = isSelected
+      ? (isDarkMode ? const Color(0xFF1E2336) : accentColor.withValues(alpha: 0.07))
+      : (isDarkMode ? const Color(0xFF181C28) : const Color(0xFFF8FAFC));
+  final border = isSelected
+      ? Border.all(color: accentColor.withValues(alpha: 0.8), width: 1.2)
+      : Border.all(color: isDarkMode ? const Color(0xFF242A3C) : const Color(0xFFE2E8F0), width: 1);
+
+  return Material(
+    color: Colors.transparent,
+    child: InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setMenuState(() {
+          chatbotService.bgePassageMode = mode;
+        });
+        onConfigurationChanged();
+        Future.delayed(const Duration(milliseconds: 140), () {
+          if (dialogContext.mounted) {
+            Navigator.of(dialogContext).pop();
+            showStatusBanner(
+              context: parentContext,
+              detail: '$title ($tag)',
+              icon: Icons.article_rounded,
+              color: accentColor,
+            );
+          }
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(10),
+          border: border,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.5, vertical: 1.5),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: isSelected ? 0.16 : 0.08),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    tag,
+                    style: TextStyle(
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.w700,
+                      color: accentColor,
+                    ),
+                  ),
+                ),
+                if (isSelected)
+                  Icon(Icons.check_circle_rounded, size: 13, color: accentColor)
+                else
+                  Icon(Icons.radio_button_off_rounded, size: 12, color: isDarkMode ? Colors.white12 : Colors.black12),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 /// Menampilkan pill notifikasi status konfigurasi yang minimalis dan mewah di bagian bawah tengah layar.

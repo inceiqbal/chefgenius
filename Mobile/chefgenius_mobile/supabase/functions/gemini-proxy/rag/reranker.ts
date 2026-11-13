@@ -11,133 +11,16 @@ import {
     RERANKER_TIMEOUT_MS,
     RAG_RERANK_TOP_K,
     BGE_PASSAGE_MODE,
-    MODEL_NAME,
 } from '../config.ts'
 import { getRagChunkIndex } from './prompt.ts'
 import { log } from '../utils/logger.ts'
-
-export async function rerankWithGemini(
-    clinicalQuery: string,
-    documents: RAGDocument[],
-    geminiApiKey: string,
-    runId: string
-): Promise<{
-    documents: RAGDocument[]
-    latency_ms: number
-    scores: Record<string, number>[]
-    status: RerankerStatus
-    safeguard_triggered: boolean
-}> {
-    const startTime = Date.now()
-    try {
-        const candidateSnippets = documents.map((doc, idx) => {
-            const title = doc.title || 'Dokumen'
-            const chunkIdx = getRagChunkIndex(doc)
-            const snippet = (doc.content || '').replace(/\s+/g, ' ').slice(0, 350)
-            return `[ID: ${idx}] (${title} - Chunk ${chunkIdx})\n${snippet}`
-        }).join('\n\n')
-
-        const prompt = `Anda bertindak sebagai Cross-Encoder Reranker medis untuk sistem RAG klinis.
-Tugas Anda adalah menilai relevansi setiap potongan dokumen kandidat terhadap query klinis pengguna secara objektif dan mendalam.
-
-Query Pengguna:
-"${clinicalQuery}"
-
-Kandidat Dokumen:
-${candidateSnippets}
-
-Aturan Penilaian:
-1. Berikan skor relevansi antara 0.00 hingga 1.00 untuk SETIAP ID dokumen.
-   - 1.00 = Sangat relevan, langsung memuat jawaban angka target, obat lini pertama/alternatif, atau kondisi klinis spesifik pada query.
-   - 0.50 = Topik terkait secara umum tetapi tidak menjawab detail klinis spesifik yang ditanyakan.
-   - 0.00 = Tidak relevan sama sekali atau membahas kondisi/penyakit yang berbeda.
-2. Output HARUS berupa array JSON murni tanpa markdown, tanpa penjelasan:
-[{"id": 0, "score": 0.95}, {"id": 1, "score": 0.20}]`
-
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${geminiApiKey}`
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.0,
-                    maxOutputTokens: 1024,
-                }
-            })
-        })
-
-        if (res.ok) {
-            const data = await res.json()
-            const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
-            const cleaned = textResponse.replace(/```json/gi, '').replace(/```/gi, '').trim()
-            let parsed: unknown = null
-            try {
-                parsed = JSON.parse(cleaned)
-            } catch {
-                const match = cleaned.match(/\[\s*\{[\s\S]*\}\s*\]/)
-                if (match) {
-                    try { parsed = JSON.parse(match[0]) } catch { /* ignore */ }
-                }
-            }
-
-            if (Array.isArray(parsed) && parsed.length > 0) {
-                const scoreMap = new Map<number, number>()
-                for (const item of parsed) {
-                    if (typeof item.id === 'number' && typeof item.score === 'number') {
-                        scoreMap.set(item.id, item.score)
-                    }
-                }
-
-                const scoredDocs = documents.map((doc, i) => {
-                    const rawScore = scoreMap.get(i) ?? 0
-                    return {
-                        ...doc,
-                        reranker_score: rawScore,
-                        hybrid_score: rawScore,
-                    }
-                })
-
-                scoredDocs.sort((a, b) => (b.reranker_score ?? 0) - (a.reranker_score ?? 0))
-                const latency_ms = Date.now() - startTime
-
-                const topDocs = scoredDocs.slice(0, RAG_RERANK_TOP_K)
-                const scoresList = topDocs.map(d => ({
-                    [`${d.title}#${getRagChunkIndex(d)}`]: d.reranker_score ?? 0
-                }))
-
-                log.info(runId, 'Gemini Cross-Encoder Reranker succeeded', {
-                    latency_ms,
-                    top_candidates: scoresList
-                })
-
-                return {
-                    documents: topDocs,
-                    latency_ms,
-                    scores: scoresList,
-                    status: 'fallback_gemini_ranker',
-                    safeguard_triggered: false
-                }
-            }
-        }
-    } catch (err) {
-        log.warn(runId, 'Gemini fallback reranker exception', err)
-    }
-
-    return {
-        documents: documents.slice(0, RAG_RERANK_TOP_K),
-        latency_ms: Date.now() - startTime,
-        scores: [],
-        status: 'fallback_api_error',
-        safeguard_triggered: false
-    }
-}
 
 export async function rerankDocuments(
     clinicalQuery: string,
     documents: RAGDocument[],
     runId: string,
-    _geminiApiKey?: string
+    _geminiApiKey?: string,
+    passageMode: 'content_only' | 'citation_plus_content' = BGE_PASSAGE_MODE
 ): Promise<{
     documents: RAGDocument[]
     latency_ms: number
@@ -155,7 +38,7 @@ export async function rerankDocuments(
         const queryForReranker = clinicalQuery.trim()
 
         const documentTexts = documents.map(doc => {
-            if (BGE_PASSAGE_MODE === 'content_only') {
+            if (passageMode === 'content_only') {
                 return doc.content
             }
             const citation = typeof doc.metadata?.citation_text === 'string' && doc.metadata.citation_text.trim()
@@ -340,56 +223,8 @@ export async function rerankDocuments(
             }
         }
 
-        // Secondary fallback: Dedicated local BGE service
         if (scores.length !== documents.length) {
-            const bgeServiceUrl = Deno.env.get('BGE_RERANKER_URL') ||
-                (Deno.env.get('INDOBERT_EMBEDDING_URL') ? Deno.env.get('INDOBERT_EMBEDDING_URL')!.replace(/\/embed\/?$/, '/rerank') : null) ||
-                'http://127.0.0.1:8000/rerank'
-
-            try {
-                log.info(runId, 'Reranker: Calling Dedicated BGE Fallback Service', {
-                    endpoint: bgeServiceUrl,
-                    num_documents: documents.length,
-                })
-                const svcAbort = new AbortController()
-                const svcTimeout = setTimeout(() => svcAbort.abort(), 15000)
-
-                const svcResp = await fetch(bgeServiceUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        query: queryForReranker,
-                        documents: documentTexts,
-                    }),
-                    signal: svcAbort.signal,
-                })
-                clearTimeout(svcTimeout)
-
-                if (svcResp.ok) {
-                    const svcData = await svcResp.json()
-                    if (svcData && Array.isArray(svcData.scores) && svcData.scores.length === documents.length) {
-                        scores = svcData.scores
-                        parsedEndpoint = bgeServiceUrl
-                        parsedVariant = 'local_bge_cross_encoder_service'
-                        log.info(runId, `Reranker: Dedicated BGE Service fallback succeeded`, {
-                            latency_ms: Date.now() - startTime,
-                            scores_count: scores.length,
-                        })
-                    } else {
-                        attemptErrors.push(`BGE Service score count mismatch: expected ${documents.length}`)
-                    }
-                } else {
-                    attemptErrors.push(`BGE Service HTTP ${svcResp.status}`)
-                }
-            } catch (svcErr) {
-                const isTimeout = svcErr instanceof DOMException && svcErr.name === 'AbortError'
-                attemptErrors.push(`BGE Service: ${isTimeout ? 'timeout(15s)' : String(svcErr)}`)
-                log.warn(runId, 'Reranker: Dedicated BGE Service unreachable', { error: String(svcErr) })
-            }
-        }
-
-        if (scores.length !== documents.length) {
-            log.warn(runId, 'Reranker: BGE Cross-Encoder unavailable across all endpoints, falling back to retrieval order', {
+            log.warn(runId, 'Reranker: HuggingFace BGE Cross-Encoder unavailable, falling back to retrieval order', {
                 attempts: attemptErrors,
             })
             return {

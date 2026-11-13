@@ -221,8 +221,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  const Text('Mohon tunggu, asisten nutrisi sedang merespon...'),
+                  SizedBox(width: 12),
+                  Text('Mohon tunggu, asisten nutrisi sedang merespon...'),
                 ],
               ),
               backgroundColor: Colors.orange[700],
@@ -373,7 +373,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
                                     ? 'PRE-RETR'
                                     : _chatbotService.ragMode == 'naive'
                                         ? 'NAIVE'
-                                        : 'PURE LLM',
+                                        : 'BASELINE',
                         style: TextStyle(
                           fontSize: 8.5,
                           fontWeight: FontWeight.w700,
@@ -417,6 +417,37 @@ class _ChatbotScreenState extends State<ChatbotScreen> with TickerProviderStateM
                             color: _chatbotService.embeddingEngine == 'indobert'
                                 ? const Color(0xFFFBBF24)
                                 : const Color(0xFF2DD4BF),
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (_chatbotService.ragMode == 'post_retrieval' || _chatbotService.ragMode == 'advanced') ...[
+                      const SizedBox(width: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: (_chatbotService.bgePassageMode == 'citation_plus_content'
+                                  ? const Color(0xFF8B5CF6)
+                                  : const Color(0xFF0EA5E9))
+                              .withValues(alpha: isDarkMode ? 0.2 : 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: (_chatbotService.bgePassageMode == 'citation_plus_content'
+                                    ? const Color(0xFF8B5CF6)
+                                    : const Color(0xFF0EA5E9))
+                                .withValues(alpha: 0.35),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          _chatbotService.bgePassageMode == 'citation_plus_content' ? 'CIT+TXT' : 'TXT ONLY',
+                          style: TextStyle(
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.3,
+                            color: _chatbotService.bgePassageMode == 'citation_plus_content'
+                                ? const Color(0xFFA78BFA)
+                                : const Color(0xFF38BDF8),
                           ),
                         ),
                       ),

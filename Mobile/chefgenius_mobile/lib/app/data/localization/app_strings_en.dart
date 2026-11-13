@@ -181,6 +181,19 @@ final Map<String, String> englishTexts = {
   'item_exists': 'is already in pantry!',
   'gen_btn': 'Create Recipe with AI',
 
+  // --- PANTRY DIALOGS ---
+  'delete_ingredient_title': 'Delete Ingredient?',
+  'delete_ingredient_msg': '@name will be removed from pantry.',
+  'edit_ingredient_title': 'Edit Ingredient',
+  'ingredient_name_label': 'Ingredient Name',
+  'ingredient_qty_label': 'Quantity',
+  'history_delete_all_title': 'Delete All History?',
+  'history_delete_all_msg': 'Are you sure you want to delete all cooking memories? Cei will forget what you cooked! 🥺',
+  'history_delete_item_title': 'Delete This History?',
+  'history_delete_item_msg': 'Are you sure you want to delete cooking history for @title? 🗑️',
+  'recipe_not_found_title': 'Recipe Lost?',
+  'recipe_not_found_msg': 'Oops, this recipe seems to be missing or corrupted. Sorry! 😔',
+
   // --- GENERATE RECIPE SCREEN (AI) ---
   'gen_appbar_title': 'Chef AI',
   'gen_section_title': 'Recipe Ideas for Chef Cei:',
@@ -222,7 +235,7 @@ final Map<String, String> englishTexts = {
   
   // Navigation
   'nav_social': 'Social',
-  'nav_chef_ai': 'Chef AI',
+  'nav_chef_ai': 'Consultation',
   'nav_profile': 'Profile',
 
   // --- GENERATOR WIDGETS ---
@@ -238,7 +251,7 @@ final Map<String, String> englishTexts = {
   'persona_standard': 'Standard Chef',
   'persona_grandma': 'Loving Grandma',
   'persona_nutritionist': 'Nutritionist',
-  'persona_wife': 'Beloved Wife',
+  'persona_wife': 'Beloved Partner',
   'persona_ramsay': 'Strict Chef',
   'level_req': 'Reach Level @level to unlock @name!',
 
@@ -434,6 +447,7 @@ If you have questions about this Privacy Policy or T&C, please contact:''',
   'pantry_hint_offline': 'Offline (Cannot add items)',
   'pantry_hint_online': 'Enter ingredient (e.g. Cheese)',
   'pantry_cam_tooltip': 'Scan Fridge (Cei Vision)',
+  'pantry_quantity_hint': '100g / 2 pcs', // NEW: Quantity field hint
   'add_btn': 'Add',
 
   // --- PANTRY COMMON INGREDIENTS ---
@@ -698,4 +712,11 @@ If you have questions about this Privacy Policy or T&C, please contact:''',
   'sanction_level1_msg': 'This feature is temporarily restricted (Sanction Level 1).',
   'sanction_level2_msg': 'You can only browse now (Sanction Level 2)',
   'sanction_level3_msg': 'Your account has been suspended. Please submit an appeal.',
+
+  // --- CHATBOT (MVP for Thesis) ---
+  'chatbot_title': 'Food Consultation',
+  'chatbot_fab': 'Ask Cei',
+  'chatbot_disclaimer': 'This information is for educational purposes and does not replace professional health advice.',
+  'chatbot_hint': 'Ask about nutrition, allergies, or recipes...',
+  'chatbot_error': 'Failed to get response. Please try again.',
 };

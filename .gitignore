@@ -1,2 +1,31 @@
 .vercel
 .env*.local
+
+# Environment variables and secrets
+*.env
+*.env.*
+*.env.local
+dart_defines.env
+working_gemini_keys.json
+
+# Dependencies & Build artifacts
+node_modules/
+**/node_modules/
+.dart_tool/
+**/build/
+.venv/
+__pycache__/
+*.pyc
+supabase/.temp/
+
+# Temporary, scratch, and local drafts
+scratch/
+**/scratch/
+*.docx
+*.bak
+Dokumen_Knowledge_Base_Untuk_Dosen/
+brief/
+jurnal/
+.vscode/
+**/.vscode/
+**/.idea/

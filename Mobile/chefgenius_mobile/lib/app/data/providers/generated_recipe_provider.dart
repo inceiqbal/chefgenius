@@ -11,7 +11,7 @@ class GeneratedRecipeProvider extends ChangeNotifier {
   String? _error;
   
   // Supabase Client buat ambil User ID
-  final supabase = Supabase.instance.client;
+  SupabaseClient get supabase => Supabase.instance.client;
 
   List<Recipe> get generatedRecipes => _generatedRecipes;
   bool get isGenerating => _isGenerating;

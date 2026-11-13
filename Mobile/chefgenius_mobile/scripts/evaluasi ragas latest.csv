@@ -1,0 +1,89 @@
+# ======================================================================
+# RINGKASAN EVALUASI RAGAS V10.0 (RATA-RATA 5 MODE ARSITEKTUR DENGAN GPT-4o)
+# ======================================================================
+Mode,Faithfulness,Answer Relevance,Context Relevance,RAGAS (Eksplisit n=10),RAGAS (Implisit n=5),Rata-rata RAGAS (Total)
+Baseline (No RAG),0.4839,0.6505,0.0,0.3729,0.3886,0.3782
+Naive RAG,0.6748,0.6562,0.3667,0.5844,0.5289,0.5659
+Pre-Retrieval Only,0.798,0.6551,0.6333,0.7032,0.6799,0.6955
+Post-Retrieval Only,0.7671,0.6407,0.6667,0.6921,0.6902,0.6915
+Full Advanced RAG,0.8562,0.6441,0.8333,0.8299,0.6738,0.7779
+
+# ======================================================================
+# HASIL LENGKAP EVALUASI RAGAS V10.0 PER SKENARIO (75 ENTRI RESMI)
+# ======================================================================
+mode,mode_label,scenario_id,scenario_type,faithfulness,answer_relevance,context_relevance,ragas_score
+none,Baseline (No RAG),V01,explicit,0.8,0.7331,0.0,0.511
+none,Baseline (No RAG),V02,explicit,1.0,0.6017,0.0,0.5339
+none,Baseline (No RAG),V03,explicit,0.5,0.5964,0.0,0.3655
+none,Baseline (No RAG),V04,implicit,0.7,0.6838,0.0,0.4613
+none,Baseline (No RAG),V05,implicit,0.7778,0.7909,0.0,0.5229
+none,Baseline (No RAG),V06,explicit,0.3333,0.736,0.0,0.3565
+none,Baseline (No RAG),V07,implicit,0.6,0.5561,0.0,0.3854
+none,Baseline (No RAG),V08,explicit,0.3333,0.6836,0.0,0.339
+none,Baseline (No RAG),V09,explicit,0.0,0.7075,0.0,0.2358
+none,Baseline (No RAG),V10,explicit,0.3333,0.6585,0.0,0.3306
+none,Baseline (No RAG),V11,explicit,1.0,0.6937,0.0,0.5646
+none,Baseline (No RAG),V12,implicit,0.1667,0.578,0.0,0.2482
+none,Baseline (No RAG),V13,explicit,0.2143,0.6099,0.0,0.2747
+none,Baseline (No RAG),V14,explicit,0.0,0.6533,0.0,0.2178
+none,Baseline (No RAG),V15,implicit,0.5,0.4757,0.0,0.3252
+naive,Naive RAG,V01,explicit,0.75,0.6134,0.0,0.4545
+naive,Naive RAG,V02,explicit,1.0,0.5993,1.0,0.8664
+naive,Naive RAG,V03,explicit,0.8333,0.6773,0.0,0.5036
+naive,Naive RAG,V04,implicit,0.8333,0.6057,0.5,0.6463
+naive,Naive RAG,V05,implicit,0.5,0.6783,0.5,0.5594
+naive,Naive RAG,V06,explicit,0.1667,0.731,0.0,0.2992
+naive,Naive RAG,V07,implicit,0.5,0.5297,0.5,0.5099
+naive,Naive RAG,V08,explicit,0.6,0.707,0.0,0.4357
+naive,Naive RAG,V09,explicit,0.5714,0.6805,0.5,0.584
+naive,Naive RAG,V10,explicit,0.6667,0.713,0.5,0.6266
+naive,Naive RAG,V11,explicit,1.0,0.6284,1.0,0.8761
+naive,Naive RAG,V12,implicit,0.6667,0.659,0.0,0.4419
+naive,Naive RAG,V13,explicit,0.2,0.6612,0.5,0.4537
+naive,Naive RAG,V14,explicit,1.0,0.7322,0.5,0.7441
+naive,Naive RAG,V15,implicit,0.8333,0.6274,0.0,0.4869
+pre_retrieval,Pre-Retrieval Only,V01,explicit,1.0,0.7046,1.0,0.9015
+pre_retrieval,Pre-Retrieval Only,V02,explicit,1.0,0.629,1.0,0.8763
+pre_retrieval,Pre-Retrieval Only,V03,explicit,1.0,0.6738,1.0,0.8913
+pre_retrieval,Pre-Retrieval Only,V04,implicit,1.0,0.5934,1.0,0.8645
+pre_retrieval,Pre-Retrieval Only,V05,implicit,0.7143,0.7033,0.5,0.6392
+pre_retrieval,Pre-Retrieval Only,V06,explicit,0.0,0.6583,0.0,0.2194
+pre_retrieval,Pre-Retrieval Only,V07,implicit,0.8571,0.5615,0.5,0.6395
+pre_retrieval,Pre-Retrieval Only,V08,explicit,1.0,0.6811,0.0,0.5604
+pre_retrieval,Pre-Retrieval Only,V09,explicit,1.0,0.7091,1.0,0.903
+pre_retrieval,Pre-Retrieval Only,V10,explicit,0.6667,0.7107,0.5,0.6258
+pre_retrieval,Pre-Retrieval Only,V11,explicit,1.0,0.704,1.0,0.9013
+pre_retrieval,Pre-Retrieval Only,V12,implicit,0.7143,0.5578,0.5,0.5907
+pre_retrieval,Pre-Retrieval Only,V13,explicit,0.1429,0.6735,0.0,0.2721
+pre_retrieval,Pre-Retrieval Only,V14,explicit,1.0,0.6441,1.0,0.8814
+pre_retrieval,Pre-Retrieval Only,V15,implicit,0.875,0.6218,0.5,0.6656
+post_retrieval,Post-Retrieval Only,V01,explicit,0.7857,0.7184,1.0,0.8347
+post_retrieval,Post-Retrieval Only,V02,explicit,1.0,0.6209,1.0,0.8736
+post_retrieval,Post-Retrieval Only,V03,explicit,0.6,0.5969,0.0,0.399
+post_retrieval,Post-Retrieval Only,V04,implicit,1.0,0.5954,1.0,0.8651
+post_retrieval,Post-Retrieval Only,V05,implicit,1.0,0.6733,1.0,0.8911
+post_retrieval,Post-Retrieval Only,V06,explicit,0.4,0.5999,0.0,0.3333
+post_retrieval,Post-Retrieval Only,V07,implicit,0.5714,0.4943,0.5,0.5219
+post_retrieval,Post-Retrieval Only,V08,explicit,1.0,0.6382,0.5,0.7127
+post_retrieval,Post-Retrieval Only,V09,explicit,1.0,0.7319,1.0,0.9106
+post_retrieval,Post-Retrieval Only,V10,explicit,0.625,0.6578,0.5,0.5943
+post_retrieval,Post-Retrieval Only,V11,explicit,1.0,0.6508,1.0,0.8836
+post_retrieval,Post-Retrieval Only,V12,implicit,0.4444,0.6684,0.5,0.5376
+post_retrieval,Post-Retrieval Only,V13,explicit,0.2222,0.6975,0.5,0.4732
+post_retrieval,Post-Retrieval Only,V14,explicit,1.0,0.7175,1.0,0.9058
+post_retrieval,Post-Retrieval Only,V15,implicit,0.8571,0.5494,0.5,0.6355
+advanced,Full Advanced RAG,V01,explicit,1.0,0.6718,1.0,0.8906
+advanced,Full Advanced RAG,V02,explicit,1.0,0.6484,1.0,0.8828
+advanced,Full Advanced RAG,V03,explicit,0.8889,0.5564,1.0,0.8151
+advanced,Full Advanced RAG,V04,implicit,1.0,0.5539,1.0,0.8513
+advanced,Full Advanced RAG,V05,implicit,0.6667,0.7385,1.0,0.8017
+advanced,Full Advanced RAG,V06,explicit,0.8333,0.6498,1.0,0.8277
+advanced,Full Advanced RAG,V07,implicit,0.5556,0.548,0.5,0.5345
+advanced,Full Advanced RAG,V08,explicit,1.0,0.6461,1.0,0.882
+advanced,Full Advanced RAG,V09,explicit,0.8571,0.6218,1.0,0.8263
+advanced,Full Advanced RAG,V10,explicit,1.0,0.6119,0.5,0.704
+advanced,Full Advanced RAG,V11,explicit,1.0,0.7023,1.0,0.9008
+advanced,Full Advanced RAG,V12,implicit,0.5,0.5726,0.5,0.5242
+advanced,Full Advanced RAG,V13,explicit,0.6667,0.7791,0.5,0.6486
+advanced,Full Advanced RAG,V14,explicit,1.0,0.7626,1.0,0.9209
+advanced,Full Advanced RAG,V15,implicit,0.875,0.5976,0.5,0.6575

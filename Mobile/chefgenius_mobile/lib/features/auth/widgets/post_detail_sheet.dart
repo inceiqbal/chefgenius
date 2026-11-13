@@ -5,6 +5,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import '../../../app/data/providers/language_provider.dart';
+import '../../../app/widgets/modern_alert_dialog.dart';
 import '../../community/widgets/edit_post_bottom_sheet.dart';
 
 class PostDetailSheet extends StatefulWidget {
@@ -373,69 +374,78 @@ class _PostDetailSheetState extends State<PostDetailSheet> with SingleTickerProv
             if (widget.isMyPost && (widget.onEditSuccess != null || widget.onDelete != null))
               Align(
                 alignment: Alignment.centerRight,
-                child: IconButton(
-                  icon: Icon(Icons.more_horiz, color: textColor),
-                  onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                      builder: (menuCtx) => SafeArea(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (widget.onEditSuccess != null)
-                              ListTile(
-                                leading: Icon(Icons.edit_outlined, color: textColor),
-                                title: Text(context.read<LanguageProvider>().getText('edit')),
-                                onTap: () async {
-                                  Navigator.pop(menuCtx);
-                                  // Close the post sheet first
-                                  Navigator.pop(context);
-                                  final newCaption = await showModalBottomSheet<String>(
-                                    context: context,
-                                    isScrollControlled: true,
-                                    backgroundColor: Colors.transparent,
-                                    builder: (ctx) => EditPostBottomSheet(post: widget.post),
-                                  );
-                                  if (newCaption != null) {
-                                    final updatedPost = Map<String, dynamic>.from(widget.post);
-                                    updatedPost['caption'] = newCaption;
-                                    updatedPost['is_edited'] = true;
-                                    widget.onEditSuccess!(updatedPost);
-                                  }
-                                },
-                              ),
-                            if (widget.onDelete != null)
-                              ListTile(
-                                leading: const Icon(Icons.delete_outline, color: Colors.red),
-                                title: Text(context.read<LanguageProvider>().getText('delete')),
-                                onTap: () async {
-                                  Navigator.pop(menuCtx);
-                                  final confirmed = await showDialog<bool>(
-                                    context: context,
-                                    builder: (ctx) => AlertDialog(
-                                      title: Text(context.read<LanguageProvider>().getText('delete_post_confirm_title')),
-                                      content: Text(context.read<LanguageProvider>().getText('delete_post_confirm_desc')),
-                                      actions: [
-                                        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.read<LanguageProvider>().getText('cancel'))),
-                                        TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(context.read<LanguageProvider>().getText('delete'), style: const TextStyle(color: Colors.red))),
-                                      ],
-                                    ),
-                                  );
-                                  if (confirmed == true) {
-                                    // Close the post sheet then call delete
-                                    Navigator.pop(context);
-                                    try {
-                                      await widget.onDelete!(widget.post['id'].toString());
-                                    } catch (e) {
-                                      debugPrint('Error during delete callback: $e');
-                                    }
-                                  }
-                                },
-                              ),
-                          ],
-                        ),
-                      ),
+                child: Builder(
+                  builder: (builderContext) {
+                    // Check if post is editable (within 24 hours)
+                    final createdAt = DateTime.parse(widget.post['created_at']);
+                    final now = DateTime.now();
+                    final isEditable = now.difference(createdAt.toLocal()).inHours < 24;
+                    
+                    return IconButton(
+                      icon: Icon(Icons.more_horiz, color: textColor),
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                          builder: (menuCtx) => SafeArea(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Only show Edit if within 24 hours
+                                if (widget.onEditSuccess != null && isEditable)
+                                  ListTile(
+                                    leading: Icon(Icons.edit_outlined, color: textColor),
+                                    title: Text(context.read<LanguageProvider>().getText('edit')),
+                                    onTap: () async {
+                                      Navigator.pop(menuCtx);
+                                      // Close the post sheet first
+                                      Navigator.pop(context);
+                                      final newCaption = await showModalBottomSheet<String>(
+                                        context: context,
+                                        isScrollControlled: true,
+                                        backgroundColor: Colors.transparent,
+                                        builder: (ctx) => EditPostBottomSheet(post: widget.post),
+                                      );
+                                      if (newCaption != null) {
+                                        final updatedPost = Map<String, dynamic>.from(widget.post);
+                                        updatedPost['caption'] = newCaption;
+                                        updatedPost['is_edited'] = true;
+                                        widget.onEditSuccess!(updatedPost);
+                                      }
+                                    },
+                                  ),
+                                if (widget.onDelete != null)
+                                  ListTile(
+                                    leading: const Icon(Icons.delete_outline, color: Colors.red),
+                                    title: Text(context.read<LanguageProvider>().getText('delete')),
+                                    onTap: () async {
+                                      Navigator.pop(menuCtx);
+                                      final lang = context.read<LanguageProvider>();
+                                      final confirmed = await ModernAlertDialog.showConfirmation(
+                                        context: context,
+                                        title: lang.getText('delete_post_confirm_title'),
+                                        message: lang.getText('delete_post_confirm_desc'),
+                                        confirmText: lang.getText('delete'),
+                                        cancelText: lang.getText('cancel'),
+                                        icon: Icons.delete_forever_rounded,
+                                        isDestructive: true,
+                                      );
+                                      if (confirmed == true) {
+                                        // Close the post sheet then call delete
+                                        Navigator.pop(context);
+                                        try {
+                                          await widget.onDelete!(widget.post['id'].toString());
+                                        } catch (e) {
+                                          debugPrint('Error during delete callback: $e');
+                                        }
+                                      }
+                                    },
+                                  ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     );
                   },
                 ),

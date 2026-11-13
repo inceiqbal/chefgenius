@@ -115,6 +115,7 @@ class _RecipeSearchScreenState extends State<RecipeSearchScreen> {
   // --- FUNGSI FILTER UI (UPDATED) ---
   void _showFilterBottomSheet() {
     final lang = context.read<LanguageProvider>();
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
     // Temporary state for the bottom sheet
     Set<String> tempSelectedFilters = Set.from(_selectedFilters);
@@ -123,81 +124,103 @@ class _RecipeSearchScreenState extends State<RecipeSearchScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Container(
-              padding: const EdgeInsets.all(20),
-              height: 520, // Increased height for rating section
+              decoration: BoxDecoration(
+                color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.75,
+              ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        lang.getText('filter_title'), 
-                        style: TextStyle(
-                          fontSize: 20, 
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
-                        )
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          setModalState(() {
-                            tempSelectedFilters = {"all"};
-                            tempSelectedRatingFilters = {};
-                          });
-                        },
-                        child: const Text("Reset"),
-                      )
-                    ],
+                  // Handle bar
+                  Container(
+                    margin: const EdgeInsets.only(top: 12),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                  const SizedBox(height: 16),
                   
-                  // Category Chips
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(colors: [Color(0xFFE67E22), Color(0xFFD35400)]),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(color: const Color(0xFFE67E22).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2)),
+                            ],
+                          ),
+                          child: const Icon(Icons.filter_list_rounded, color: Colors.white, size: 20),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Text(
+                            lang.getText('filter_title'),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: isDarkMode ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: () {
+                            setModalState(() {
+                              tempSelectedFilters = {"all"};
+                              tempSelectedRatingFilters = {};
+                            });
+                          },
+                          icon: const Icon(Icons.refresh_rounded, size: 16),
+                          label: const Text("Reset"),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Content
                   Expanded(
                     child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Section: Kategori
-                          Text(
-                            'Kategori',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black54,
-                            ),
+                          _buildFilterSectionHeader(
+                            Icons.category_rounded, 
+                            'Kategori', 
+                            const [Color(0xFF3498DB), Color(0xFF2980B9)],
+                            isDarkMode,
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 12),
                           Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
+                            spacing: 8,
+                            runSpacing: 8,
                             children: _categoryKeywords.keys.map((categoryKey) {
                               final isSelected = tempSelectedFilters.contains(categoryKey);
-                              final label = lang.getText('cat_$categoryKey'); 
+                              final label = lang.getText('cat_$categoryKey');
                               
-                              return FilterChip(
-                                label: Text(label),
-                                selected: isSelected,
-                                selectedColor: Colors.orange.withOpacity(0.2),
-                                checkmarkColor: Colors.orange,
-                                backgroundColor: Theme.of(context).brightness == Brightness.dark 
-                                    ? Colors.grey[800] 
-                                    : null,
-                                labelStyle: TextStyle(
-                                  color: isSelected 
-                                      ? Colors.orange 
-                                      : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87),
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                ),
+                              return _buildModernFilterChip(
+                                label: label,
+                                isSelected: isSelected,
+                                selectedColor: Colors.orange,
+                                isDarkMode: isDarkMode,
                                 onSelected: (selected) {
                                   setModalState(() {
                                     if (categoryKey == "all") {
@@ -221,38 +244,27 @@ class _RecipeSearchScreenState extends State<RecipeSearchScreen> {
                             }).toList(),
                           ),
                           
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 24),
                           
                           // Section: Rating
-                          Text(
-                            'Rating',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black54,
-                            ),
+                          _buildFilterSectionHeader(
+                            Icons.star_rounded, 
+                            'Rating', 
+                            const [Color(0xFFF39C12), Color(0xFFE67E22)],
+                            isDarkMode,
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 12),
                           Wrap(
-                            spacing: 10,
-                            runSpacing: 10,
+                            spacing: 8,
+                            runSpacing: 8,
                             children: _ratingFilters.entries.map((entry) {
                               final isSelected = tempSelectedRatingFilters.contains(entry.key);
                               
-                              return FilterChip(
-                                label: Text(entry.value),
-                                selected: isSelected,
-                                selectedColor: Colors.amber.withOpacity(0.2),
-                                checkmarkColor: Colors.amber,
-                                backgroundColor: Theme.of(context).brightness == Brightness.dark 
-                                    ? Colors.grey[800] 
-                                    : null,
-                                labelStyle: TextStyle(
-                                  color: isSelected 
-                                      ? Colors.amber.shade700 
-                                      : (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87),
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                ),
+                              return _buildModernFilterChip(
+                                label: entry.value,
+                                isSelected: isSelected,
+                                selectedColor: Colors.amber,
+                                isDarkMode: isDarkMode,
                                 onSelected: (selected) {
                                   setModalState(() {
                                     if (selected) {
@@ -270,29 +282,45 @@ class _RecipeSearchScreenState extends State<RecipeSearchScreen> {
                     ),
                   ),
                   
-                  const SizedBox(height: 16),
-                  
                   // Apply Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _selectedFilters = tempSelectedFilters;
-                          _selectedRatingFilters = tempSelectedRatingFilters;
-                        });
-                        Navigator.pop(context);
-                        _performSearch(isRefresh: true);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: [Color(0xFFE67E22), Color(0xFFD35400)]),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(color: const Color(0xFFE67E22).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3)),
+                          ],
+                        ),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedFilters = tempSelectedFilters;
+                              _selectedRatingFilters = tempSelectedRatingFilters;
+                            });
+                            Navigator.pop(context);
+                            _performSearch(isRefresh: true);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.check_rounded, size: 20),
+                              SizedBox(width: 8),
+                              Text("Terapkan Filter", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
                         ),
                       ),
-                      child: const Text("Terapkan Filter", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -301,6 +329,73 @@ class _RecipeSearchScreenState extends State<RecipeSearchScreen> {
           }
         );
       },
+    );
+  }
+  
+  Widget _buildFilterSectionHeader(IconData icon, String title, List<Color> gradient, bool isDarkMode) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: gradient),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: Colors.white, size: 14),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: isDarkMode ? Colors.white70 : Colors.black54,
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildModernFilterChip({
+    required String label,
+    required bool isSelected,
+    required Color selectedColor,
+    required bool isDarkMode,
+    required Function(bool) onSelected,
+  }) {
+    return GestureDetector(
+      onTap: () => onSelected(!isSelected),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected 
+              ? selectedColor.withOpacity(0.15)
+              : (isDarkMode ? Colors.white.withOpacity(0.05) : Colors.grey.shade100),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? selectedColor : (isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isSelected) ...[
+              Icon(Icons.check_rounded, size: 14, color: selectedColor),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? selectedColor : (isDarkMode ? Colors.white : Colors.black87),
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
   // -----------------------

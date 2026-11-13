@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RecipeRatingProvider with ChangeNotifier {
-  final _supabase = Supabase.instance.client;
+  SupabaseClient get _supabase => Supabase.instance.client;
 
   // Cache ratings per recipe
   final Map<int, double> _averageRatings = {};
@@ -17,13 +17,13 @@ class RecipeRatingProvider with ChangeNotifier {
 
   /// Load rating data for a specific recipe
   Future<void> loadRating(int recipeId) async {
-    final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) return;
-
-    _isLoading[recipeId] = true;
-    notifyListeners();
-
     try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) return;
+
+      _isLoading[recipeId] = true;
+      notifyListeners();
+
       // Get average rating and count using RPC
       final statsResult = await _supabase
           .rpc('get_recipe_rating_stats', params: {'p_recipe_id': recipeId});
@@ -60,12 +60,12 @@ class RecipeRatingProvider with ChangeNotifier {
 
   /// Submit or update user's rating for a recipe
   Future<bool> submitRating(int recipeId, int rating) async {
-    final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) return false;
-
     if (rating < 1 || rating > 5) return false;
 
     try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) return false;
+
       // Upsert the rating (insert or update if exists)
       await _supabase.from('recipe_ratings').upsert({
         'recipe_id': recipeId,
@@ -90,10 +90,10 @@ class RecipeRatingProvider with ChangeNotifier {
 
   /// Delete user's rating for a recipe
   Future<bool> deleteRating(int recipeId) async {
-    final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) return false;
-
     try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) return false;
+
       await _supabase
           .from('recipe_ratings')
           .delete()

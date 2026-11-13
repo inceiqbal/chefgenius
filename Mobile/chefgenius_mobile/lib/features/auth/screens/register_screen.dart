@@ -262,170 +262,368 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>();
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(lang.getText('register_title')),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 20),
-                Image.asset('assets/images/icon_chefgenius.png', height: 80),
-                const SizedBox(height: 16),
-                Text(lang.getText('register_subtitle'),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 32),
-                TextFormField(
-                  controller: _fullNameController,
-                  decoration: InputDecoration(
-                      labelText: lang.getText('full_name_label'),
-                      border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.person_outline)),
-                  textCapitalization: TextCapitalization.words,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return lang.getText('full_name_empty');
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                      labelText: lang.getText('email_label'),
-                      border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.email_outlined)),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) => _validateEmail(value, lang),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                    labelText: lang.getText('pass_label'),
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDarkMode
+                ? [const Color(0xFF1A1A2E), const Color(0xFF16213E)]
+                : [const Color(0xFFFFF8F0), const Color(0xFFFFE8D6)],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Modern AppBar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isDarkMode ? Colors.white.withOpacity(0.1) : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8),
+                          ],
+                        ),
+                        child: Icon(Icons.arrow_back_ios_new_rounded, 
+                          color: isDarkMode ? Colors.white : Colors.black87, size: 20),
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _isPasswordVisible = !_isPasswordVisible;
-                        });
-                      },
                     ),
-                  ),
-                  obscureText: !_isPasswordVisible,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return lang.getText('pass_empty');
-                    }
-                    if (value.length < 6) {
-                      return lang.getText('pass_short');
-                    }
-                    return null;
-                  },
+                  ],
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _confirmPasswordController,
-                  decoration: InputDecoration(
-                    labelText: lang.getText('pass_confirm_label'),
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.lock_person_outlined),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
-                        });
-                      },
-                    ),
-                  ),
-                  obscureText: !_isConfirmPasswordVisible,
-                  validator: (value) {
-                    if (value != _passwordController.text) {
-                      return lang.getText('pass_mismatch');
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: (_isLoading || _isCooldown) ? null : () async {
-                    await _handleRegister();
-                    _startCooldown();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : _isCooldown
-                          ? Text('Tunggu $_cooldown detik...')
-                          : Text(lang.getText('register_btn')),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12.0),
-                  child: RichText(
-                    textAlign: TextAlign.center,
-                    text: TextSpan(
-                      style: Theme.of(context).textTheme.bodySmall,
+              ),
+              
+              // Content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        TextSpan(text: lang.getText('terms_agree')),
-                        TextSpan(
-                          text: lang.getText('terms_link'),
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            decoration: TextDecoration.underline,
+                        // Logo
+                        Center(
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: isDarkMode 
+                                  ? Colors.white.withOpacity(0.1)
+                                  : Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Image.asset(
+                              'assets/images/icon_chefgenius.png',
+                              height: 60,
+                            ),
                           ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              Navigator.pushNamed(context, AppRoutes.termsRoute);
-                            },
                         ),
-                        TextSpan(text: lang.getText('terms_and')),
-                        TextSpan(
-                          text: lang.getText('privacy_link'),
+                        const SizedBox(height: 20),
+                        
+                        // Title
+                        Text(
+                          lang.getText('register_subtitle'),
+                          textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            decoration: TextDecoration.underline,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode ? Colors.white : Colors.black87,
                           ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              Navigator.pushNamed(context, AppRoutes.privacyPolicyRoute);
-                            },
                         ),
-                        TextSpan(text: lang.getText('terms_us')),
+                        Text(
+                          'Buat akun baru dan mulai masak!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        
+                        // Full Name
+                        _buildModernTextField(
+                          controller: _fullNameController,
+                          label: lang.getText('full_name_label'),
+                          hint: 'Masukkan nama lengkap',
+                          icon: Icons.person_outline_rounded,
+                          isDarkMode: isDarkMode,
+                          textCapitalization: TextCapitalization.words,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return lang.getText('full_name_empty');
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Email
+                        _buildModernTextField(
+                          controller: _emailController,
+                          label: lang.getText('email_label'),
+                          hint: 'contoh@email.com',
+                          icon: Icons.email_rounded,
+                          isDarkMode: isDarkMode,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (value) => _validateEmail(value, lang),
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Password
+                        _buildModernTextField(
+                          controller: _passwordController,
+                          label: lang.getText('pass_label'),
+                          hint: 'Minimal 6 karakter',
+                          icon: Icons.lock_rounded,
+                          isDarkMode: isDarkMode,
+                          obscureText: !_isPasswordVisible,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _isPasswordVisible ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                              color: Colors.grey.shade500,
+                            ),
+                            onPressed: () {
+                              setState(() => _isPasswordVisible = !_isPasswordVisible);
+                            },
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return lang.getText('pass_empty');
+                            }
+                            if (value.length < 6) {
+                              return lang.getText('pass_short');
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Confirm Password
+                        _buildModernTextField(
+                          controller: _confirmPasswordController,
+                          label: lang.getText('pass_confirm_label'),
+                          hint: 'Ulangi password',
+                          icon: Icons.lock_person_rounded,
+                          isDarkMode: isDarkMode,
+                          obscureText: !_isConfirmPasswordVisible,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _isConfirmPasswordVisible ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                              color: Colors.grey.shade500,
+                            ),
+                            onPressed: () {
+                              setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible);
+                            },
+                          ),
+                          validator: (value) {
+                            if (value != _passwordController.text) {
+                              return lang.getText('pass_mismatch');
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        
+                        // Register Button
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: (_isLoading || _isCooldown) 
+                                ? null
+                                : const LinearGradient(
+                                    colors: [Color(0xFFE67E22), Color(0xFFD35400)],
+                                  ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: (_isLoading || _isCooldown) ? null : [
+                              BoxShadow(
+                                color: const Color(0xFFE67E22).withOpacity(0.4),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            onPressed: (_isLoading || _isCooldown) ? null : () async {
+                              await _handleRegister();
+                              _startCooldown();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: (_isLoading || _isCooldown) ? Colors.grey : Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 22,
+                                    width: 22,
+                                    child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                                  )
+                                : _isCooldown
+                                    ? Text(
+                                        'Tunggu $_cooldown detik...',
+                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                                      )
+                                    : Text(
+                                        lang.getText('register_btn'),
+                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                                      ),
+                          ),
+                        ),
+                        
+                        // Terms
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
+                          child: RichText(
+                            textAlign: TextAlign.center,
+                            text: TextSpan(
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                              children: [
+                                TextSpan(text: lang.getText('terms_agree')),
+                                TextSpan(
+                                  text: lang.getText('terms_link'),
+                                  style: const TextStyle(
+                                    color: Color(0xFFE67E22),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () {
+                                      Navigator.pushNamed(context, AppRoutes.termsRoute);
+                                    },
+                                ),
+                                TextSpan(text: lang.getText('terms_and')),
+                                TextSpan(
+                                  text: lang.getText('privacy_link'),
+                                  style: const TextStyle(
+                                    color: Color(0xFFE67E22),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () {
+                                      Navigator.pushNamed(context, AppRoutes.privacyPolicyRoute);
+                                    },
+                                ),
+                                TextSpan(text: lang.getText('terms_us')),
+                              ],
+                            ),
+                          ),
+                        ),
+                        
+                        // Login Link
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Sudah punya akun? ',
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                            GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: const Text(
+                                'Masuk Sekarang',
+                                style: TextStyle(
+                                  color: Color(0xFFE67E22),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
                 ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(lang.getText('login_link')),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildModernTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    required bool isDarkMode,
+    TextInputType? keyboardType,
+    TextCapitalization textCapitalization = TextCapitalization.none,
+    bool obscureText = false,
+    Widget? suffixIcon,
+    String? Function(String?)? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: isDarkMode ? Colors.white70 : Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          textCapitalization: textCapitalization,
+          obscureText: obscureText,
+          validator: validator,
+          style: TextStyle(color: isDarkMode ? Colors.white : Colors.black87),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(color: Colors.grey.shade400),
+            prefixIcon: Container(
+              margin: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE67E22).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: const Color(0xFFE67E22), size: 20),
+            ),
+            suffixIcon: suffixIcon,
+            filled: true,
+            fillColor: isDarkMode 
+                ? Colors.white.withOpacity(0.05)
+                : Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: Color(0xFFE67E22), width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: Colors.redAccent),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
+        ),
+      ],
     );
   }
 }

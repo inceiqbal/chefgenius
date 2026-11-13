@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 import 'gemini_proxy_service.dart';
 import 'notification_service.dart';
 import '../data/models/recipe_model.dart';
@@ -20,10 +21,22 @@ class ChatbotService {
 
   final List<ChatMessage> _messages = [];
   Recipe? _currentRecipe;
+  String _sessionId = const Uuid().v4();
+  String? _sessionUserId;
+
+  String get _currentSessionId {
+    final userId = _supabase.auth.currentUser?.id;
+    if (_sessionUserId != userId) {
+      _sessionUserId = userId;
+      _sessionId = const Uuid().v4();
+    }
+    return _sessionId;
+  }
 
   // Konfigurasi eksperimental Tugas Akhir
   String _ragMode = 'advanced';
   String _embeddingEngine = 'indobert';
+  String _bgePassageMode = 'citation_plus_content';
 
   // Mode evaluasi terstandarisasi untuk eksperimen RAGAS
   bool _isEvaluationMode = false;
@@ -51,6 +64,14 @@ class ChatbotService {
     if (['gemini', 'indobert'].contains(engine)) {
       _embeddingEngine = engine;
       debugPrint('ChatbotService: Engine embedding diubah ke $engine');
+    }
+  }
+
+  String get bgePassageMode => _bgePassageMode;
+  set bgePassageMode(String mode) {
+    if (['content_only', 'citation_plus_content'].contains(mode)) {
+      _bgePassageMode = mode;
+      debugPrint('ChatbotService: BGE Passage mode diubah ke $mode');
     }
   }
 
@@ -154,7 +175,9 @@ class ChatbotService {
         recipeDescription: _currentRecipe?.description,
         ragMode: _ragMode,
         embeddingEngine: _embeddingEngine,
+        bgePassageMode: _bgePassageMode,
         isEvaluation: _isEvaluationMode,
+        sessionId: _currentSessionId,
       );
 
       if (response != null) {
@@ -215,7 +238,9 @@ class ChatbotService {
         recipeDescription: _currentRecipe?.description,
         ragMode: _ragMode,
         embeddingEngine: _embeddingEngine,
+        bgePassageMode: _bgePassageMode,
         isEvaluation: _isEvaluationMode,
+        sessionId: _currentSessionId,
       );
 
       if (response != null) {
@@ -289,6 +314,7 @@ class ChatbotService {
 
   void clearSession() {
     _currentRecipe = null;
+    _sessionId = const Uuid().v4();
   }
 
   Future<void> deleteAllHistory() async {
@@ -301,7 +327,7 @@ class ChatbotService {
             .eq('user_id', userId);
       }
       _messages.clear();
-      _currentRecipe = null;
+      clearSession();
     } catch (e) {
       debugPrint('ChatbotService: Gagal menghapus riwayat - $e');
     }

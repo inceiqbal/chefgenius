@@ -145,6 +145,9 @@ class _EditPostBottomSheetState extends State<EditPostBottomSheet> {
           // CONTENT SCROLLABLE
           Expanded(
             child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

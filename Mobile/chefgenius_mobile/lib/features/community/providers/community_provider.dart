@@ -5,7 +5,7 @@ import '../../../app/data/providers/language_provider.dart';
 import '../widgets/save_collection_dialog.dart'; 
 
 class CommunityProvider with ChangeNotifier {
-  final _supabase = Supabase.instance.client;
+  SupabaseClient get _supabase => Supabase.instance.client;
    
   // State
   List<Map<String, dynamic>> _posts = [];

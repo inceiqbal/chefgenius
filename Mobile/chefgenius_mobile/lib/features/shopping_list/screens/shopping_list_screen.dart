@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../app/widgets/custom_app_bar.dart';
+import '../../../app/widgets/modern_alert_dialog.dart';
 import '../../../app/data/providers/connectivity_provider.dart';
 import '../../../app/data/providers/shopping_list_provider.dart';
-import '../../../app/data/providers/language_provider.dart'; // IMPORT LANG PROVIDER
+import '../../../app/data/providers/language_provider.dart';
 import '../../../app/widgets/offline_banner.dart';
 
 class ShoppingListScreen extends StatefulWidget {
@@ -48,54 +49,103 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     final hasCheckedItems = allItems.any((item) => item.isChecked);
 
     // Warna Dinamis
-    final backgroundColor = isDarkMode ? Colors.black : Colors.grey[50];
-    final surfaceColor = isDarkMode ? Colors.grey[900] : Colors.white;
+    final surfaceColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDarkMode ? Colors.white : Colors.black87;
     final subTextColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
     final borderColor = (isDarkMode ? Colors.grey[800] : Colors.grey[300]) ?? Colors.grey;
-    final inputFillColor = isDarkMode ? Colors.grey[800] : Colors.grey[50];
+    final inputFillColor = isDarkMode ? Colors.white.withOpacity(0.05) : Colors.grey[50];
 
     return Scaffold(
-      backgroundColor: backgroundColor, 
-      appBar: CustomAppBar(title: lang.getText('shopping_title')), // Teks Dinamis
-      body: Column(
-        children: [
-          const OfflineBanner(),
-
-          // --- INFO BANNER (Disclaimer) ---
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isDarkMode ? Colors.orange.withOpacity(0.1) : Colors.orange.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: isDarkMode ? Colors.orange.withOpacity(0.3) : Colors.orange.shade100),
+      backgroundColor: isDarkMode ? const Color(0xFF121212) : const Color(0xFFFAFAFA),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: isDarkMode ? const Color(0xFF1A1A2E) : const Color(0xFFFFF8F0),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_rounded, color: isDarkMode ? Colors.white : Colors.black87),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [Color(0xFF3498DB), Color(0xFF2980B9)]),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.shopping_cart_rounded, color: Colors.white, size: 18),
             ),
-            child: Row(
-              children: [
-                 Icon(Icons.info_outline_rounded, size: 20, color: isDarkMode ? Colors.orangeAccent : Colors.orange),
-                 const SizedBox(width: 12),
-                 Expanded(
-                   child: Text(
-                     lang.getText('shopping_disclaimer'),
-                     style: TextStyle(
-                       fontSize: 13,
-                       fontWeight: FontWeight.w500,
-                       color: isDarkMode ? Colors.orange[200] : Colors.orange[900],
+            const SizedBox(width: 12),
+            Text(
+              lang.getText('shopping_title'),
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.w800,
+                fontSize: 20,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ],
+        ),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDarkMode
+                ? [const Color(0xFF1A1A2E), const Color(0xFF121212)]
+                : [const Color(0xFFFFF8F0), const Color(0xFFFAFAFA)],
+          ),
+        ),
+        child: Column(
+          children: [
+            const OfflineBanner(),
+
+            // --- INFO BANNER (Disclaimer) ---
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isDarkMode
+                      ? [Colors.orange.withOpacity(0.15), Colors.orange.withOpacity(0.08)]
+                      : [Colors.orange.shade50, Colors.orange.shade100.withOpacity(0.5)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                   Container(
+                     padding: const EdgeInsets.all(8),
+                     decoration: BoxDecoration(
+                       color: Colors.orange.withOpacity(0.2),
+                       borderRadius: BorderRadius.circular(10),
+                     ),
+                     child: Icon(Icons.info_outline_rounded, size: 18, color: isDarkMode ? Colors.orange.shade300 : Colors.orange.shade700),
+                   ),
+                   const SizedBox(width: 12),
+                   Expanded(
+                     child: Text(
+                       lang.getText('shopping_disclaimer'),
+                       style: TextStyle(
+                         fontSize: 12,
+                         fontWeight: FontWeight.w500,
+                         color: isDarkMode ? Colors.orange[200] : Colors.orange[900],
+                       ),
                      ),
                    ),
-                 ),
-              ],
+                ],
+              ),
             ),
-          ),
           
-          // --- BAGIAN INPUT & KONTROL ---
-          Container(
-            color: surfaceColor,
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
+            // --- BAGIAN INPUT & KONTROL ---
+            Container(
+              color: surfaceColor,
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
                 // 1. Input Manual
                 Row(
                   children: [
@@ -379,6 +429,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -390,55 +441,42 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     }
   }
 
-  void _confirmDeleteGroup(BuildContext context, String title, ShoppingListProvider provider, bool isOffline) {
-    // Ambil lang provider di sini
+  void _confirmDeleteGroup(BuildContext context, String title, ShoppingListProvider provider, bool isOffline) async {
     final lang = context.read<LanguageProvider>();
 
-    showDialog(
+    final confirm = await ModernAlertDialog.showConfirmation(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(lang.getText('delete_group_title').replaceAll('@title', title)), // "Hapus [Judul]?"
-        content: Text(lang.getText('delete_group_desc')), // "Semua item..."
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(lang.getText('cancel'))), // "Batal"
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              provider.deleteGroup(title, isOffline);
-            },
-            child: Text(lang.getText('delete_btn'), style: const TextStyle(color: Colors.red)), // "Hapus"
-          ),
-        ],
-      ),
+      title: lang.getText('delete_group_title').replaceAll('@title', title),
+      message: lang.getText('delete_group_desc'),
+      confirmText: lang.getText('delete_btn'),
+      cancelText: lang.getText('cancel'),
+      icon: Icons.delete_outline_rounded,
+      isDestructive: true,
     );
+    
+    if (confirm == true) {
+      provider.deleteGroup(title, isOffline);
+    }
   }
 
-  void _confirmDeleteSelected(BuildContext context, ShoppingListProvider provider, List<dynamic> allItems, bool isOffline) {
-    // Ambil lang provider di sini
+  void _confirmDeleteSelected(BuildContext context, ShoppingListProvider provider, List<dynamic> allItems, bool isOffline) async {
     final lang = context.read<LanguageProvider>();
 
-    showDialog(
+    final confirm = await ModernAlertDialog.showConfirmation(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(lang.getText('delete_selected_title')), // "Hapus item terpilih?"
-        content: Text(lang.getText('delete_selected_desc')), // "Item yang sudah..."
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx), 
-            child: Text(lang.getText('cancel')) // "Batal"
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              final checkedItems = allItems.where((i) => i.isChecked).toList();
-              for (var item in checkedItems) {
-                provider.deleteItem(item, isOffline);
-              }
-            }, 
-            child: Text(lang.getText('delete_btn'), style: const TextStyle(color: Colors.red)) // "Hapus"
-          ),
-        ],
-      ),
+      title: lang.getText('delete_selected_title'),
+      message: lang.getText('delete_selected_desc'),
+      confirmText: lang.getText('delete_btn'),
+      cancelText: lang.getText('cancel'),
+      icon: Icons.delete_sweep_rounded,
+      isDestructive: true,
     );
+    
+    if (confirm == true) {
+      final checkedItems = allItems.where((i) => i.isChecked).toList();
+      for (var item in checkedItems) {
+        provider.deleteItem(item, isOffline);
+      }
+    }
   }
 }

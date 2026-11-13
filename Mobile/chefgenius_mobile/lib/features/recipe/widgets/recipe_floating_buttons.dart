@@ -13,10 +13,29 @@ class RecipeFloatingButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lang = Provider.of<LanguageProvider>(context);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Tombol Tanya Chef Cei
+        FloatingActionButton.extended(
+          heroTag: "ask_chef_btn",
+          onPressed: () {
+            Navigator.pushNamed(
+              context,
+              AppRoutes.chatbotRoute,
+              arguments: recipe,
+            );
+          },
+          label: const Text("Tanya Chef Cei"),
+          icon: const Icon(Icons.chat_bubble_outline_rounded),
+          backgroundColor: Colors.teal,
+          foregroundColor: Colors.white,
+          elevation: 4,
+        ),
+        const SizedBox(height: 10),
+        // Tombol Pamerkan Hasil Masak
         FloatingActionButton.extended(
           heroTag: "upload_btn",
           onPressed: () {
@@ -35,12 +54,13 @@ class RecipeFloatingButtons extends StatelessWidget {
           backgroundColor: Colors.orange,
           elevation: 4,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
+        // Tombol Mulai Memasak
         if (recipe.steps.isNotEmpty)
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(28),
-              border: Theme.of(context).brightness == Brightness.dark 
+              border: isDarkMode 
                   ? Border.all(color: Colors.white.withOpacity(0.3), width: 1.5)
                   : null,
             ),
@@ -55,7 +75,7 @@ class RecipeFloatingButtons extends StatelessWidget {
               },
               label: Text(lang.getText('rd_start_cooking'), style: const TextStyle(fontWeight: FontWeight.bold)),
               icon: const Icon(Icons.play_circle_fill_rounded),
-              backgroundColor: Theme.of(context).brightness == Brightness.dark 
+              backgroundColor: isDarkMode 
                   ? Colors.grey[900] 
                   : Theme.of(context).primaryColor,
               foregroundColor: Colors.white,

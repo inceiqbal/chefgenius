@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart'; 
 import '../../../app/widgets/custom_app_bar.dart';
+import '../../../app/widgets/modern_alert_dialog.dart';
 import '../../../app/config/chef_cei_assets.dart'; 
 import 'package:intl/intl.dart'; 
 import 'package:chefgenius/features/recipe/screens/recipe_detail_screen.dart';
@@ -69,26 +70,19 @@ class _CookingHistoryScreenState extends State<CookingHistoryScreen> {
   // --- FITUR HAPUS SEMUA ---
   Future<void> _confirmDeleteAll() async {
     final lang = Provider.of<LanguageProvider>(context, listen: false);
-    showDialog(
+    final confirm = await ModernAlertDialog.showConfirmation(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Hapus Semua Riwayat?"),
-        content: const Text("Yakin mau hapus semua kenangan masak kita? Nanti Cei lupa lho kamu udah masak apa aja! 🥺"), 
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(lang.getText('cancel'), style: const TextStyle(color: Colors.grey)),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _deleteAllHistory();
-            },
-            child: Text(lang.getText('delete_btn'), style: const TextStyle(color: Colors.redAccent)),
-          ),
-        ],
-      ),
+      title: lang.getText('history_delete_all_title'),
+      message: lang.getText('history_delete_all_msg'),
+      confirmText: lang.getText('delete_all'),
+      cancelText: lang.getText('cancel'),
+      icon: Icons.delete_forever_rounded,
+      isDestructive: true,
     );
+    
+    if (confirm == true) {
+      _deleteAllHistory();
+    }
   }
 
   Future<void> _deleteAllHistory() async {
@@ -242,13 +236,13 @@ class _CookingHistoryScreenState extends State<CookingHistoryScreen> {
            MaterialPageRoute(builder: (_) => RecipeDetailScreen(recipe: recipeToOpen!)),
          );
       } else {
-         showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text("Resepnya Ilang?"), 
-              content: const Text("Waduh, resep ini kayaknya udah gak ada atau datanya rusak. Maaf ya! 😔"), 
-              actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Oke"))],
-            )
+         final langDialog = Provider.of<LanguageProvider>(context, listen: false);
+         ModernAlertDialog.showInfo(
+           context: context,
+           title: langDialog.getText('recipe_not_found_title'),
+           message: langDialog.getText('recipe_not_found_msg'),
+           buttonText: langDialog.getText('history_ok'),
+           icon: Icons.search_off_rounded,
          );
       }
 
@@ -328,24 +322,14 @@ class _CookingHistoryScreenState extends State<CookingHistoryScreen> {
                         child: const Icon(Icons.delete, color: Colors.white, size: 32),
                       ),
                       confirmDismiss: (direction) async {
-                        return await showDialog(
+                        return await ModernAlertDialog.showConfirmation(
                           context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: const Text("Hapus Riwayat Ini?"),
-                              content: Text("Yakin mau hapus riwayat masak $title? 🗑️"),
-                              actions: <Widget>[
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(false),
-                                  child: Text(lang.getText('cancel')),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(true),
-                                  child: Text(lang.getText('delete_btn'), style: const TextStyle(color: Colors.red)),
-                                ),
-                              ],
-                            );
-                          },
+                          title: lang.getText('history_delete_item_title'),
+                          message: lang.getText('history_delete_item_msg').replaceAll('@title', title),
+                          confirmText: lang.getText('delete_btn'),
+                          cancelText: lang.getText('cancel'),
+                          icon: Icons.delete_outline_rounded,
+                          isDestructive: true,
                         );
                       },
                       onDismissed: (direction) {

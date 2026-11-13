@@ -5,6 +5,7 @@ export interface ChatbotRequest {
     action: 'chatbot' | 'generate_recipe' | 'translate' | 'tts' | 'vision' | 'diagnose_reranker'
     rag_mode?: RagMode
     embedding_engine?: EmbeddingEngine
+    bge_passage_mode?: 'content_only' | 'citation_plus_content'
     query_embedding?: number[]
     user_id?: string
     session_id?: string
@@ -113,7 +114,6 @@ export type RerankerStatus =
     | 'fallback_score_mismatch'
     | 'fallback_timeout'
     | 'fallback_exception'
-    | 'fallback_gemini_ranker'
 
 export type QueryRewriteStatus =
     | 'success'

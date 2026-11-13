@@ -38,44 +38,77 @@ class CommunityAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     return AppBar(
       elevation: 0,
-      backgroundColor: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+      backgroundColor: isDarkMode ? const Color(0xFF1A1A2E) : const Color(0xFFFFF8F0),
       leading: isSearchingMode 
         ? IconButton(
-            icon: Icon(Icons.arrow_back, color: isDarkMode ? Colors.white : Colors.black87),
+            icon: Icon(Icons.arrow_back_rounded, color: isDarkMode ? Colors.white : Colors.black87),
             onPressed: onSearchClose,
           )
         : null,
       title: isSearchingMode
-        ? TextField(
-            controller: searchController,
-            autofocus: true,
-            style: TextStyle(color: isDarkMode ? Colors.white : Colors.black87),
-            decoration: InputDecoration(
-              hintText: "Cari resep, judul, atau caption...",
-              hintStyle: TextStyle(color: isDarkMode ? Colors.white54 : Colors.black38),
-              border: InputBorder.none,
+        ? Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
             ),
-            onSubmitted: (value) {
-              context.read<CommunityProvider>().setSearchQuery(value.trim());
-            },
-          )
-        : Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                lang.getText('comm_title'), 
-                style: TextStyle(
-                  fontWeight: FontWeight.w800, 
-                  color: isDarkMode ? Colors.white : Colors.black87,
-                  fontSize: 22,
-                  letterSpacing: -0.5,
-                ),
+            child: TextField(
+              controller: searchController,
+              autofocus: true,
+              style: TextStyle(color: isDarkMode ? Colors.white : Colors.black87),
+              decoration: InputDecoration(
+                hintText: "Cari resep, judul, atau caption...",
+                hintStyle: TextStyle(color: isDarkMode ? Colors.grey.shade500 : Colors.grey.shade500, fontSize: 14),
+                border: InputBorder.none,
+                icon: Icon(Icons.search_rounded, color: Colors.orange, size: 20),
               ),
-              if (sanctionEndTime != null)
-                Text(
-                  "Sanksi: $remainingTime",
-                  style: const TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.bold),
+              onSubmitted: (value) {
+                context.read<CommunityProvider>().setSearchQuery(value.trim());
+              },
+            ),
+          )
+        : Row(
+            children: [
+              // Logo/Icon
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFE67E22), Color(0xFFD35400)],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
                 ),
+                child: const Icon(Icons.people_alt_rounded, color: Colors.white, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    lang.getText('comm_title'), 
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800, 
+                      color: isDarkMode ? Colors.white : Colors.black87,
+                      fontSize: 20,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  if (sanctionEndTime != null)
+                    Container(
+                      margin: const EdgeInsets.only(top: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        "⚠️ Sanksi: $remainingTime",
+                        style: const TextStyle(fontSize: 10, color: Colors.red, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                ],
+              ),
             ],
           ),
       centerTitle: false,
@@ -83,7 +116,7 @@ class CommunityAppBar extends StatelessWidget implements PreferredSizeWidget {
         if (!isOffline) ...[
           if (isSearchingMode)
             IconButton(
-              icon: Icon(Icons.close, color: isDarkMode ? Colors.white : Colors.black87),
+              icon: Icon(Icons.close_rounded, color: isDarkMode ? Colors.white : Colors.black87),
               onPressed: () {
                 searchController.clear();
                 onSearchClose();
@@ -91,7 +124,7 @@ class CommunityAppBar extends StatelessWidget implements PreferredSizeWidget {
             )
           else
             IconButton(
-              icon: Icon(Icons.search, color: isDarkMode ? Colors.white : Colors.black87),
+              icon: Icon(Icons.search_rounded, color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600),
               onPressed: onSearchTap,
             ),
           
@@ -101,10 +134,8 @@ class CommunityAppBar extends StatelessWidget implements PreferredSizeWidget {
                 return Stack(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.notifications_outlined, color: isDarkMode ? Colors.white : Colors.black87),
+                      icon: Icon(Icons.notifications_outlined, color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600),
                       onPressed: () {
-                        // Navigate to notifications screen without marking all as read.
-                        // Individual items are marked read when tapped.
                         Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const NotificationsScreen()),
@@ -121,11 +152,37 @@ class CommunityAppBar extends StatelessWidget implements PreferredSizeWidget {
                 );
               },
             ),
-            IconButton(
-              icon: const Icon(Icons.add, size: 28, color: Colors.orange),
-              onPressed: onUploadPressed,
+            // Modern Add Button
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: GestureDetector(
+                onTap: onUploadPressed,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFE67E22), Color(0xFFD35400)],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFE67E22).withOpacity(0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(Icons.add_rounded, size: 18, color: Colors.white),
+                      SizedBox(width: 4),
+                      Text('Post', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
+                    ],
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(width: 8),
           ],
         ],
       ],

@@ -165,13 +165,16 @@ class _SplashScreenState extends State<SplashScreen> {
       final prefs = await SharedPreferences.getInstance();
       if (!mounted) return;
 
-      final bool hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
-
-      if (!hasSeenOnboarding) {
-        _navigationHandled = true;
-        Navigator.pushReplacementNamed(context, AppRoutes.onboardingRoute);
-        return;
-      }
+      // 🔥 DISABLE ONBOARDING UNTUK EVALUASI RAGAS
+      // final bool hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
+      // if (!hasSeenOnboarding) {
+      //   _navigationHandled = true;
+      //   Navigator.pushReplacementNamed(context, AppRoutes.onboardingRoute);
+      //   return;
+      // }
+      
+      // Mark onboarding as seen to skip in future
+      await prefs.setBool('hasSeenOnboarding', true);
 
       final session = Supabase.instance.client.auth.currentSession;
 
@@ -276,13 +279,13 @@ class _SplashScreenState extends State<SplashScreen> {
 
         if (!_navigationHandled && mounted) {
           _navigationHandled = true;
-          final bool hasSeenIntroCei = prefs.getBool('hasSeenIntroCei') ?? false;
-
-          if (!hasSeenIntroCei) {
-            Navigator.pushReplacementNamed(context, AppRoutes.introCeiRoute, arguments: userEmail);
-          } else {
-            Navigator.pushReplacementNamed(context, AppRoutes.pantryRoute, arguments: userEmail);
-          }
+          // 🔥 DISABLE INTRO CEI SHOWCASE UNTUK EVALUASI RAGAS
+          // final bool hasSeenIntroCei = prefs.getBool('hasSeenIntroCei') ?? false;
+          // if (!hasSeenIntroCei) {
+          //   Navigator.pushReplacementNamed(context, AppRoutes.introCeiRoute, arguments: userEmail);
+          // } else {
+          Navigator.pushReplacementNamed(context, AppRoutes.pantryRoute, arguments: userEmail);
+          // }
         }
       } catch (e) {
         _handleSessionError(e);

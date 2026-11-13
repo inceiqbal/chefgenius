@@ -1,3 +1,5 @@
+import 'quantity_parser.dart';
+
 class IngredientMatcher {
   // --- 1. DAFTAR KATA SAMPAH (Takaran & Satuan) ---
   // Kita hapus kata-kata ini biar pencarian fokus ke nama bahannya aja
@@ -7,6 +9,18 @@ class IngredientMatcher {
     'ml', 'gelas', 'cangkir', 'botol', 'sendok', 'makan', 'teh', 'jumbo', 'kecil', 'sedang', 'besar',
     'butir', 'pcs', 'pack', 'bungkus', 'kaleng'
   ];
+  
+  // NEW: Compare quantities between pantry and recipe
+  // Returns: 'sufficient', 'insufficient', 'unknown', 'nameOnly'
+  static String _compareQuantities(String pantryItem, String recipeItem) {
+    // Parse pantry item (format: "name|quantity" or just "name")
+    final pantryParts = pantryItem.split('|');
+    final pantryQty = pantryParts.length > 1 ? pantryParts[1] : '';
+    
+    // Recipe item is raw string, need to extract quantity
+    // Use QuantityParser to compare
+    return QuantityParser.compare(pantryQty, recipeItem);
+  }
 
   // --- 2. KAMUS BAHAN (THE HOLY GRAIL) ---
   static final Map<String, String> _ingredientDictionary = {
@@ -456,6 +470,7 @@ class IngredientMatcher {
 
     int foundCount = 0;
     int validComponents = 0;
+    bool hasInsufficientQuantity = false; // NEW: Track if any ingredient has insufficient quantity
 
     // 2. Cek setiap pecahan bahan
     for (var component in components) {
@@ -475,21 +490,38 @@ class IngredientMatcher {
         
         isValidComponent = true;
 
-        // Cek apakah bahan ini ada di pantry (pake logika contains dua arah)
-        bool isFound = pantryItems.any((pantryItem) {
+        // NEW: Find matching pantry item and check quantity
+        String? matchedPantryItem;
+        for (var pantryItem in pantryItems) {
           String pClean = normalize(pantryItem);
-          // print("DEBUG: Comparing '$cleanComponent' with Pantry '$pantryItem' -> Clean: '$pClean'");
           
           // Logic: Saling mengandung (Partial Match)
-          // Misal Pantry: "Bawang", Resep: "Bawang Bombay" -> Match
-          // Misal Pantry: "Telur Ayam", Resep: "Telur" -> Match
-          return cleanComponent.contains(pClean) || pClean.contains(cleanComponent);
-        });
+          if (cleanComponent.contains(pClean) || pClean.contains(cleanComponent)) {
+            matchedPantryItem = pantryItem;
+            break;
+          }
+        }
 
-        if (isFound) {
-          // print("DEBUG: MATCH FOUND!");
-          componentMatched = true;
-          break; // Kalau salah satu opsi ATAU ketemu, anggap komponen ini terpenuhi
+        if (matchedPantryItem != null) {
+          // Found name match, now check quantity
+          String qtyStatus = _compareQuantities(matchedPantryItem, orComponent);
+          
+          if (qtyStatus == 'sufficient' || qtyStatus == 'nameOnly' || qtyStatus == 'unknown') {
+            // Either sufficient quantity, or no quantity info (name-only match), or can't compare units
+            // Treat unknown as partial (yellow) to indicate uncertainty
+            componentMatched = true;
+            if (qtyStatus == 'unknown') {
+              hasInsufficientQuantity = true; // Mark as uncertain
+            }
+          } else if (qtyStatus == 'insufficient') {
+            // Ingredient found but quantity is not enough
+            hasInsufficientQuantity = true;
+            componentMatched = true; // Still matched by name, but insufficient
+          }
+          
+          if (componentMatched) {
+            break; // Found match for this OR component
+          }
         }
       }
 
@@ -505,9 +537,13 @@ class IngredientMatcher {
     if (validComponents == 0) return IngredientMatchStatus.missing; 
     
     if (foundCount == validComponents) {
-      return IngredientMatchStatus.full; // Punya SEMUA bahan di baris ini (Hijau)
+      // All ingredients found by name
+      if (hasInsufficientQuantity) {
+        return IngredientMatchStatus.partial; // NEW: Found but insufficient quantity (Yellow)
+      }
+      return IngredientMatchStatus.full; // Punya SEMUA bahan dengan quantity cukup (Hijau)
     } else if (foundCount > 0) {
-      return IngredientMatchStatus.partial; // Punya SEBAGIAN (Kuning) -> Kasus "Cuma punya Selada"
+      return IngredientMatchStatus.partial; // Punya SEBAGIAN (Kuning)
     } else {
       return IngredientMatchStatus.missing; // Gak punya sama sekali (Merah)
     }

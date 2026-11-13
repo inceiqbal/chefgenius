@@ -180,6 +180,19 @@ final Map<String, String> indonesianTexts = {
   'item_exists': 'udah ada di pantry!',
   'gen_btn': 'Buat Resep dengan AI',
 
+  // --- PANTRY DIALOGS ---
+  'delete_ingredient_title': 'Hapus Bahan?',
+  'delete_ingredient_msg': '@name akan dihapus dari pantry.',
+  'edit_ingredient_title': 'Edit Bahan',
+  'ingredient_name_label': 'Nama Bahan',
+  'ingredient_qty_label': 'Jumlah',
+  'history_delete_all_title': 'Hapus Semua Riwayat?',
+  'history_delete_all_msg': 'Yakin mau hapus semua kenangan masak kita? Nanti Cei lupa lho kamu udah masak apa aja! 🥺',
+  'history_delete_item_title': 'Hapus Riwayat Ini?',
+  'history_delete_item_msg': 'Yakin mau hapus riwayat masak @title? 🗑️',
+  'recipe_not_found_title': 'Resepnya Ilang?',
+  'recipe_not_found_msg': 'Waduh, resep ini kayaknya udah gak ada atau datanya rusak. Maaf ya! 😔',
+
   // --- GENERATE RECIPE SCREEN (AI) ---
   'gen_appbar_title': 'Chef AI',
   'gen_section_title': 'Ide Resep untuk Chef Cei:',
@@ -221,7 +234,7 @@ final Map<String, String> indonesianTexts = {
   
   // Navigation
   'nav_social': 'Sosial',
-  'nav_chef_ai': 'Chef AI',
+  'nav_chef_ai': 'Konsultasi',
   'nav_profile': 'Profil',
   
   // --- GENERATOR WIDGETS ---
@@ -237,7 +250,7 @@ final Map<String, String> indonesianTexts = {
   'persona_standard': 'Chef Standar',
   'persona_grandma': 'Nenek Penyayang',
   'persona_nutritionist': 'Ahli Gizi',
-  'persona_wife': 'Istri Tercinta',
+  'persona_wife': 'Pasangan Tercinta',
   'persona_ramsay': 'Chef Galak',
   'level_req': 'Capai Level @level dulu buat buka @name!',
 
@@ -433,6 +446,7 @@ Jika Anda memiliki pertanyaan terkait Kebijakan Privasi atau S&K, silakan hubung
   'pantry_hint_offline': 'Offline (Gak bisa nambah)',
   'pantry_hint_online': 'Masukkan bahan lain (e.g. Keju)',
   'pantry_cam_tooltip': 'Scan Isi Kulkas (Cei Vision)',
+  'pantry_quantity_hint': '100g / 2 pcs', // NEW: Quantity field hint
   'add_btn': 'Tambah',
 
   // --- PANTRY COMMON INGREDIENTS ---
@@ -697,4 +711,11 @@ Jika Anda memiliki pertanyaan terkait Kebijakan Privasi atau S&K, silakan hubung
   'sanction_level1_msg': 'Fitur ini lagi istirahat sebentar ya (Sanksi Level 1).',
   'sanction_level2_msg': 'Kamu hanya bisa melihat-lihat ya (Sanksi Level 2)',
   'sanction_level3_msg': 'Akun Anda telah dibekukan. Silakan ajukan banding.',
+
+  // --- CHATBOT (MVP untuk Skripsi) ---
+  'chatbot_title': 'Konsultasi Makanan',
+  'chatbot_fab': 'Tanya Cei',
+  'chatbot_disclaimer': 'Informasi ini bersifat edukatif dan tidak menggantikan saran tenaga kesehatan profesional.',
+  'chatbot_hint': 'Tanyakan seputar gizi, alergi, atau resep...',
+  'chatbot_error': 'Gagal mendapatkan respons. Coba lagi.',
 };

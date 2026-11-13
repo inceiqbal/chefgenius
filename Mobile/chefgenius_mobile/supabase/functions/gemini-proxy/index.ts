@@ -6,7 +6,6 @@ declare const Deno: {
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0'
-import { vignettesMetadata as vignettesMetadataV8 } from "./vignettes_master_v8_data.ts"
 
 import {
     corsHeaders,
@@ -37,6 +36,7 @@ import {
 import { log } from './utils/logger.ts'
 import { applySafetyPostProcessing } from './utils/safety.ts'
 import { storeResponse, parseGeminiResponse, getMockGeminiResponse } from './utils/telemetry.ts'
+import { buildTelemetryPayload, matchEvaluationScenario } from './utils/telemetry_payload.ts'
 import { rewriteQueryForRetrieval, enrichRewrittenQuery } from './rag/query_rewrite.ts'
 import { retrieveContext } from './rag/retrieval.ts'
 import { rerankDocuments } from './rag/reranker.ts'
@@ -428,9 +428,12 @@ serve(async (req: Request) => {
                     ? body.userMessage
                     : (BGE_QUERY_MODE === 'rewritten' ? rewrittenQueryForReranker : body.userMessage)
 
+                const activePassageMode: 'content_only' | 'citation_plus_content' =
+                    body.bge_passage_mode || BGE_PASSAGE_MODE
+
                 log.info(runId, `RAG [${ragMode}]: Starting Pure BGE Cross-Encoder Reranking`, {
                     bge_query_mode: ragMode === 'post_retrieval' ? 'original' : BGE_QUERY_MODE,
-                    bge_passage_mode: BGE_PASSAGE_MODE,
+                    bge_passage_mode: activePassageMode,
                     candidate_pool_size: ragDocuments.length,
                 })
 
@@ -438,7 +441,8 @@ serve(async (req: Request) => {
                     bgeQuery,
                     ragDocuments,
                     runId,
-                    geminiApiKey
+                    geminiApiKey,
+                    activePassageMode
                 )
                 ragDocuments = rerankerResult.documents
                 telemetry.reranker_latency_ms = rerankerResult.latency_ms
@@ -446,17 +450,15 @@ serve(async (req: Request) => {
                 telemetry.post_processing_actions.push(`reranker_engine:${RERANKER_MODEL}`)
                 telemetry.post_processing_actions.push(`reranker_applied:${rerankerResult.scores.length}`)
                 telemetry.post_processing_actions.push(`bge_query_mode:${ragMode === 'post_retrieval' ? 'original' : BGE_QUERY_MODE}`)
-                telemetry.post_processing_actions.push(`bge_passage_mode:${BGE_PASSAGE_MODE}`)
+                telemetry.post_processing_actions.push(`bge_passage_mode:${activePassageMode}`)
 
                 if (rerankerResult.status !== 'success') {
                     telemetry.post_processing_actions.push(`reranker_fallback:${rerankerResult.status}`)
                     advancedModeNotice = rerankerResult.status === 'skipped_no_key'
                         ? '⚠️ Mode advanced: reranker nonaktif karena `HUGGINGFACE_API_KEY` belum disetel; jawaban dilanjutkan dengan fallback retrieval.'
-                        : rerankerResult.status === 'fallback_gemini_ranker'
-                            ? '⚠️ Mode advanced: BGE Reranker offline, sistem beralih ke fallback Gemini Reranker.'
-                            : rerankerResult.status === 'fallback_timeout'
-                                ? '⚠️ Mode advanced: reranker timeout; jawaban tetap dilanjutkan dengan fallback retrieval.'
-                                : '⚠️ Mode advanced: reranker sedang bermasalah, jawaban tetap dilanjutkan dengan fallback retrieval.'
+                        : rerankerResult.status === 'fallback_timeout'
+                            ? '⚠️ Mode advanced: reranker timeout; jawaban tetap dilanjutkan dengan fallback retrieval.'
+                            : '⚠️ Mode advanced: reranker sedang bermasalah, jawaban tetap dilanjutkan dengan fallback retrieval.'
                 }
             }
 
@@ -477,53 +479,21 @@ serve(async (req: Request) => {
         const promptHash = await computePromptHash(systemPrompt)
         telemetry.prompt_hash = promptHash
 
-        let matchedScenarioId = null
-        let matchedReferenceAnswer = null
-        let matchedGroundTruthDocument = null
-        let matchedGroundTruthChunkIdx: string[] | null = null
-
-        const activeMetadata = vignettesMetadataV8
-
-        for (const v of activeMetadata) {
-            if (body.userMessage.includes(v.query_text_part)) {
-                matchedScenarioId = v.scenario_id
-                matchedReferenceAnswer = v.reference_answer
-                matchedGroundTruthDocument = v.ground_truth_document
-                const chunkIdxRaw = (v as Record<string, unknown>).ground_truth_chunk_idx
-                if (Array.isArray(chunkIdxRaw) && chunkIdxRaw.length > 0) {
-                    matchedGroundTruthChunkIdx = chunkIdxRaw.map((value: string | number) => String(value))
-                } else {
-                    matchedGroundTruthChunkIdx = null
-                }
-                log.info(runId, `Auto-detected RAGAS scenario: ${matchedScenarioId}`)
-                break
-            }
+        const scenario = matchEvaluationScenario(body.userMessage, (body as any)?.scenario_id || (body as any)?.scenarioId)
+        if (scenario) {
+            telemetry.scenario_id = scenario.scenario_id
+            telemetry.reference_answer = scenario.reference_answer
+            telemetry.ground_truth_document = scenario.ground_truth_document
+            telemetry.ground_truth_chunk_idx = scenario.ground_truth_chunk_idx.map(String)
+            telemetry.post_processing_actions.push(`evaluation_scenario_matched:${scenario.scenario_id}`)
+            log.info(runId, `Auto-detected RAGAS scenario: ${scenario.scenario_id}`)
+        } else {
+            telemetry.post_processing_actions.push('evaluation_scenario_unmatched')
         }
 
         if (supabaseService) {
-            const { error: insertError } = await supabaseService.from('chatbot_telemetry').insert({
-                run_id: runId,
-                user_id: telemetry.user_id,
-                session_id: telemetry.session_id,
-                prompt_id: promptId,
-                prompt_hash: promptHash,
-                model_name: MODEL_NAME,
-                model_version: MODEL_VERSION,
-                temperature: telemetry.temperature,
-                max_tokens: telemetry.max_tokens,
-                edge_function_version: EDGE_FUNCTION_VERSION,
-                app_version: telemetry.app_version,
-                region: REGION,
-                rag_mode: ragMode,
-                query_text: body.userMessage,
-                scenario_id: matchedScenarioId,
-                reference_answer: matchedReferenceAnswer,
-                ground_truth_document: matchedGroundTruthDocument,
-                ground_truth_chunk_idx: matchedGroundTruthChunkIdx,
-                safety_flag: false,
-                safety_reasons: [],
-                post_processing_actions: [],
-            })
+            const { error: insertError } = await supabaseService.from('chatbot_telemetry')
+                .insert(buildTelemetryPayload(telemetry, body.userMessage))
 
             if (insertError) {
                 log.error(runId, 'Failed to insert initial telemetry', insertError)
@@ -625,13 +595,17 @@ serve(async (req: Request) => {
         if (ragDocuments && ragDocuments.length > 0 && ragMode !== 'none') {
             const footerLines = ragDocuments.map((doc, idx) => {
                 const chunkIdx = getRagChunkIndex(doc)
-                return `${idx + 1}. ${doc.title} source: ${doc.source} (chunk: ${chunkIdx})`
+                let fileName = (doc.source || doc.title || 'Dokumen').trim()
+                if (!fileName.toLowerCase().endsWith('.pdf')) {
+                    fileName = `${fileName}.pdf`
+                }
+                return `${idx + 1}. ${fileName} (chunk: ${chunkIdx})`
             })
             responseText += `\n\n📦 **Dokumen RAG Terambil (Top-${ragDocuments.length}):**\n${footerLines.join('\n')}`
         }
 
         const ragModeLabels: Record<RagMode, string> = {
-            'none': 'Pure LLM (Tanpa RAG)',
+            'none': 'Baseline',
             'naive': 'Naive RAG',
             'pre_retrieval': 'Pre-Retrieval',
             'post_retrieval': 'Post-Retrieval',
@@ -671,28 +645,15 @@ serve(async (req: Request) => {
             }
 
             const { error: updateError } = await supabaseService.from('chatbot_telemetry')
-                .update({
-                    token_usage: telemetry.token_usage,
-                    latency_ms: latencyMs,
-                    http_status: httpStatus,
-                    response_truncated: telemetry.response_truncated,
-                    safety_flag: telemetry.safety_flag,
-                    safety_reasons: telemetry.safety_reasons,
-                    post_processing_actions: telemetry.post_processing_actions,
-                    response_pointer: telemetry.response_pointer,
-                    response_text: telemetry.response_text,
-                    rag_documents_retrieved: telemetry.rag_documents_retrieved,
-                    rag_retrieval_latency_ms: telemetry.rag_retrieval_latency_ms,
-                    reranker_latency_ms: telemetry.reranker_latency_ms,
-                    reranker_scores: telemetry.reranker_scores,
-                    token_usage_input: Object.keys(telemetry.token_usage || {}).length > 0 ? (telemetry.token_usage?.input_tokens ?? null) : null,
-                    token_usage_output: Object.keys(telemetry.token_usage || {}).length > 0 ? (telemetry.token_usage?.output_tokens ?? null) : null,
+                .upsert({
+                    ...buildTelemetryPayload(telemetry, body.userMessage),
                     retrieved_results: retrievedResultsPayload
-                })
-                .eq('run_id', runId)
+                }, { onConflict: 'run_id' })
+                .select('run_id')
+                .single()
 
             if (updateError) {
-                log.error(runId, 'Failed to update telemetry', updateError)
+                log.error(runId, 'Failed to persist completed telemetry; check schema migration', updateError)
             }
         }
 

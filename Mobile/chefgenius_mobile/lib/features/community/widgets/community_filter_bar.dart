@@ -14,8 +14,17 @@ class CommunityFilterBar extends StatelessWidget {
     final List<String> sortOptions = ['Terbaru', 'Like Terbanyak', 'Populer'];
 
     return Container(
-      height: 50,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.black.withOpacity(0.2) : Colors.white.withOpacity(0.7),
+        border: Border(
+          bottom: BorderSide(
+            color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200,
+            width: 0.5,
+          ),
+        ),
+      ),
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
@@ -33,53 +42,95 @@ class CommunityFilterBar extends StatelessWidget {
 
             return Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
-                avatar: Icon(
-                  icon, 
-                  size: 18, 
-                  color: isSelected 
-                      ? Colors.orange.shade900 
-                      : (isDarkMode ? Colors.white70 : Colors.grey[600])
+              child: GestureDetector(
+                onTap: () => context.read<CommunityProvider>().setCategory(category),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    gradient: isSelected
+                        ? const LinearGradient(
+                            colors: [Color(0xFFE67E22), Color(0xFFD35400)],
+                          )
+                        : null,
+                    color: isSelected ? null : (isDarkMode ? Colors.grey[850] : Colors.grey[100]),
+                    borderRadius: BorderRadius.circular(20),
+                    border: isSelected
+                        ? null
+                        : Border.all(
+                            color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300,
+                            width: 0.5,
+                          ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFFE67E22).withOpacity(0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        icon,
+                        size: 16,
+                        color: isSelected
+                            ? Colors.white
+                            : (isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        category == 'Hasil Resep ChefGenius' ? 'Hasil AI' : category,
+                        style: TextStyle(
+                          color: isSelected
+                              ? Colors.white
+                              : (isDarkMode ? Colors.grey.shade300 : Colors.grey.shade700),
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                label: Text(category),
-                selected: isSelected,
-                selectedColor: Colors.orange.shade100,
-                backgroundColor: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                labelStyle: TextStyle(
-                  color: isSelected 
-                      ? Colors.orange.shade900 
-                      : (isDarkMode ? Colors.white : Colors.black87),
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                ),
-                onSelected: (selected) {
-                  if (selected) {
-                    context.read<CommunityProvider>().setCategory(category);
-                  }
-                },
               ),
             );
           }),
           // Sort Options
-          DropdownButton<String>(
-            value: provider.selectedSort,
-            underline: const SizedBox(),
-            icon: const Icon(Icons.sort, color: Colors.orange),
-            dropdownColor: isDarkMode ? Colors.grey[800] : Colors.white,
-            style: TextStyle(
-              color: isDarkMode ? Colors.white : Colors.black87,
-              fontSize: 14,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.grey[850] : Colors.grey[50],
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300,
+                width: 0.5,
+              ),
             ),
-            items: sortOptions.map((String sort) {
-              return DropdownMenuItem<String>(
-                value: sort,
-                child: Text(sort),
-              );
-            }).toList(),
-            onChanged: (String? newValue) {
-              if (newValue != null) {
-                context.read<CommunityProvider>().setSort(newValue);
-              }
-            },
+            child: DropdownButton<String>(
+              value: provider.selectedSort,
+              underline: const SizedBox(),
+              icon: const Icon(Icons.sort_rounded, color: Colors.orange, size: 18),
+              dropdownColor: isDarkMode ? const Color(0xFF2A2A2A) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              style: TextStyle(
+                color: isDarkMode ? Colors.grey.shade300 : Colors.grey.shade700,
+                fontSize: 13,
+              ),
+              items: sortOptions.map((String sort) {
+                return DropdownMenuItem<String>(
+                  value: sort,
+                  child: Text(sort),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  context.read<CommunityProvider>().setSort(newValue);
+                }
+              },
+            ),
           ),
         ],
       ),

@@ -1,7 +1,6 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -35,6 +34,7 @@ final FlutterLocalNotificationsPlugin notificationsPlugin =
 
 bool _notificationsInitialized = false;
 bool _permissionRequested = false;
+bool _isSupabaseInitialized = false;
 
 Future<void> _initNotifications() async {
   if (_notificationsInitialized) return;
@@ -158,7 +158,7 @@ Future<void> scheduleAlarmNotification({
     styleInformation: const BigTextStyleInformation(
       'Timer memasak Anda telah selesai! Segera cek masakan Anda.',
       contentTitle: '⏰ Timer Selesai!',
-      summaryText: 'Chef Genius',
+      summaryText: 'Konsultasi Nutrisi',
     ),
   );
 
@@ -277,8 +277,38 @@ void main() async {
 
   // Initialize Firebase for FCM Push Notifications
   try {
-    await Firebase.initializeApp();
-    debugPrint("✅ Firebase Initialized");
+    if (kIsWeb) {
+      const firebaseApiKey = String.fromEnvironment('FIREBASE_API_KEY');
+      const firebaseAppId = String.fromEnvironment('FIREBASE_APP_ID');
+      const firebaseMessagingSenderId = String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID');
+      const firebaseProjectId = String.fromEnvironment('FIREBASE_PROJECT_ID');
+      const firebaseAuthDomain = String.fromEnvironment('FIREBASE_AUTH_DOMAIN');
+      const firebaseStorageBucket = String.fromEnvironment('FIREBASE_STORAGE_BUCKET');
+      const firebaseMeasurementId = String.fromEnvironment('FIREBASE_MEASUREMENT_ID');
+
+      if (firebaseApiKey.isEmpty ||
+          firebaseAppId.isEmpty ||
+          firebaseMessagingSenderId.isEmpty ||
+          firebaseProjectId.isEmpty) {
+        debugPrint('⚠️ WARNING: Firebase web config kosong. Cek --dart-define FIREBASE_* saat build web.');
+      } else {
+        await Firebase.initializeApp(
+          options: FirebaseOptions(
+            apiKey: firebaseApiKey,
+            appId: firebaseAppId,
+            messagingSenderId: firebaseMessagingSenderId,
+            projectId: firebaseProjectId,
+            authDomain: firebaseAuthDomain.isEmpty ? null : firebaseAuthDomain,
+            storageBucket: firebaseStorageBucket.isEmpty ? null : firebaseStorageBucket,
+            measurementId: firebaseMeasurementId.isEmpty ? null : firebaseMeasurementId,
+          ),
+        );
+        debugPrint("✅ Firebase Initialized (Web)");
+      }
+    } else {
+      await Firebase.initializeApp();
+      debugPrint("✅ Firebase Initialized");
+    }
   } catch (e) {
     debugPrint("❌ Failed to init Firebase: $e");
   }
@@ -301,6 +331,7 @@ void main() async {
         anonKey: supabaseKey,
         debug: false,
       );
+      _isSupabaseInitialized = true;
       debugPrint("✅ Supabase Initialized");
     } catch (e) {
       debugPrint("❌ Gagal Init Supabase: $e");
@@ -415,7 +446,11 @@ class _MyAppState extends State<MyApp> {
     });
 
     _initDeepLinks();
-    _initAuthListener(); // 🔥 2. Panggil Listener di sini!
+    if (_isSupabaseInitialized) {
+      _initAuthListener(); // 🔥 2. Panggil Listener di sini!
+    } else {
+      debugPrint("⚠️ Supabase belum diinisialisasi, auth listener dilewati.");
+    }
     
     // Set flag ke false setelah 2 detik
     Future.delayed(const Duration(seconds: 2), () {
@@ -485,6 +520,11 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _handleDeepLinkNavigation(Uri uri) async {
+    if (!_isSupabaseInitialized) {
+      debugPrint("⚠️ Supabase belum siap, deep link auth-gated dilewati.");
+      return;
+    }
+
     String? postId;
 
     // Parsing URL yang Tahan Banting
@@ -547,7 +587,7 @@ class _MyAppState extends State<MyApp> {
       builder: (context, themeProvider, langProvider, child) {
         return MaterialApp(
           navigatorKey: navigatorKey,
-          title: 'Chef Genius',
+          title: 'Konsultasi Nutrisi',
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: themeProvider.themeMode,

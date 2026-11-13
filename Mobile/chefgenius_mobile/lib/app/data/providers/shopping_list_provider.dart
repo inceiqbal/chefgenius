@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/shopping_list_item_model.dart';
 
 class ShoppingListProvider extends ChangeNotifier {
-  final supabase = Supabase.instance.client;
+  SupabaseClient get supabase => Supabase.instance.client;
   late Box<ShoppingListItem> _box;
   
   List<ShoppingListItem> _items = [];

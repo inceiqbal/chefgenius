@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
+import '../../../app/data/providers/language_provider.dart';
 import 'edit_post_bottom_sheet.dart';
 import 'report_dialog.dart';
 import 'dialog_utils.dart';
-
 class PostOptionsBottomSheet extends StatelessWidget {
   final Map<String, dynamic> post;
   final int index;
@@ -76,14 +77,16 @@ class PostOptionsBottomSheet extends StatelessWidget {
               ),
             ListTile(
               leading: const Icon(Icons.delete_outline, color: Colors.red),
-              title: const Text("Hapus Postingan", style: TextStyle(color: Colors.red)),
+              title: Text(context.read<LanguageProvider>().getText('delete_post_confirm_title'), style: const TextStyle(color: Colors.red)),
               onTap: () {
                 Navigator.pop(context);
+                final lang = context.read<LanguageProvider>();
                 showInstagramDialog(
                   context: context,
-                  title: "Hapus Postingan?",
-                  content: "Yakin mau hapus? Postingan yang udah dihapus gak bisa balik lagi lho.",
-                  primaryActionText: "Hapus",
+                  title: lang.getText('delete_post_confirm_title'),
+                  content: lang.getText('delete_post_confirm_desc'),
+                  primaryActionText: lang.getText('delete'),
+                  cancelText: lang.getText('cancel'),
                   isDestructive: true,
                   onPrimaryAction: () => onDelete(post['id'], index),
                 );

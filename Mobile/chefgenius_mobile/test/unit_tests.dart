@@ -419,6 +419,71 @@ void main() {
       expect((result['main_ingredients'] as List).first, 'Ayam');
     });
   });
+
+  // ==============================================================
+  // UNIT TEST 11: Chatbot Prompt Formatting (Skripsi MVP)
+  // ==============================================================
+  group('ChatbotService Tests', () {
+    test('formatContextPrompt - includes pantry items', () {
+      final prompt = _formatChatbotContext(
+        pantryItems: ['Telur', 'Ayam', 'Bawang'],
+        dietPrefs: ['halal', 'low_sugar'],
+        allergies: ['Alergi Kacang'],
+        recipeName: 'Nasi Goreng',
+        recipeIngredients: ['Nasi', 'Telur', 'Kecap'],
+        userMessage: 'Apakah resep ini aman untuk diabetes?',
+      );
+      expect(prompt.contains('Telur'), true);
+      expect(prompt.contains('low_sugar'), true);
+      expect(prompt.contains('Nasi Goreng'), true);
+      expect(prompt.contains('Apakah resep ini aman'), true);
+    });
+    
+    test('formatContextPrompt - handles empty pantry', () {
+      final prompt = _formatChatbotContext(
+        pantryItems: [],
+        dietPrefs: ['vegan'],
+        allergies: [],
+        recipeName: null,
+        recipeIngredients: null,
+        userMessage: 'Apa yang bisa saya masak?',
+      );
+      expect(prompt.contains('Pantry: (kosong)'), true);
+      expect(prompt.contains('vegan'), true);
+    });
+
+    test('formatContextPrompt - handles empty diet preferences', () {
+      final prompt = _formatChatbotContext(
+        pantryItems: ['Beras'],
+        dietPrefs: [],
+        allergies: [],
+        recipeName: null,
+        recipeIngredients: null,
+        userMessage: 'Mau masak apa?',
+      );
+      expect(prompt.contains('Diet: (tidak ada)'), true);
+    });
+
+    test('formatContextPrompt - includes allergy warning context', () {
+      final prompt = _formatChatbotContext(
+        pantryItems: ['Udang', 'Nasi'],
+        dietPrefs: [],
+        allergies: ['Alergi Seafood'],
+        recipeName: 'Nasi Goreng Seafood',
+        recipeIngredients: ['Udang', 'Cumi', 'Nasi'],
+        userMessage: 'Apakah ini aman untuk saya?',
+      );
+      expect(prompt.contains('Alergi Seafood'), true);
+      expect(prompt.contains('Udang'), true);
+    });
+
+    test('formatDietLabel - converts key to readable label', () {
+      expect(_formatDietLabel('halal'), 'Halal');
+      expect(_formatDietLabel('low_sugar'), 'Low Sugar (Diabetes)');
+      expect(_formatDietLabel('nut_allergy'), 'Alergi Kacang');
+      expect(_formatDietLabel('unknown_key'), 'unknown key');
+    });
+  });
 }
 
 // ==============================================================
@@ -784,4 +849,59 @@ Map<String, dynamic> _fixRecipeFormatExtended(Map<String, dynamic> json) {
   }
 
   return fixedJson;
+}
+
+// ==============================================================
+// HELPER: Chatbot Prompt Formatting (MVP untuk Skripsi)
+// ==============================================================
+
+/// Format prompt konteks untuk chatbot
+String _formatChatbotContext({
+  required List<String> pantryItems,
+  required List<String> dietPrefs,
+  required List<String> allergies,
+  required String? recipeName,
+  required List<String>? recipeIngredients,
+  required String userMessage,
+}) {
+  final pantryList = pantryItems.isEmpty ? '(kosong)' : pantryItems.join(', ');
+  final dietList = dietPrefs.isEmpty ? '(tidak ada)' : dietPrefs.join(', ');
+  final allergyList = allergies.isEmpty ? '(tidak ada)' : allergies.join(', ');
+  
+  String recipeContext = '';
+  if (recipeName != null) {
+    recipeContext = '''
+RESEP:
+- Nama: $recipeName
+- Bahan: ${recipeIngredients?.join(', ') ?? '-'}
+''';
+  }
+
+  return '''
+KONTEKS PENGGUNA:
+- Pantry: $pantryList
+- Diet: $dietList
+- Alergi: $allergyList
+$recipeContext
+PERTANYAAN USER:
+$userMessage
+''';
+}
+
+/// Format diet key menjadi label readable
+String _formatDietLabel(String key) {
+  switch (key) {
+    case 'halal': return 'Halal';
+    case 'vegetarian': return 'Vegetarian';
+    case 'vegan': return 'Vegan';
+    case 'keto': return 'Keto';
+    case 'low_carb': return 'Low Carb';
+    case 'gluten_free': return 'Gluten Free';
+    case 'low_sugar': return 'Low Sugar (Diabetes)';
+    case 'nut_allergy': return 'Alergi Kacang';
+    case 'seafood_allergy': return 'Alergi Seafood';
+    case 'dairy_allergy': return 'Alergi Susu/Laktosa';
+    case 'no_onion': return 'Tanpa Bawang';
+    default: return key.replaceAll('_', ' ');
+  }
 }

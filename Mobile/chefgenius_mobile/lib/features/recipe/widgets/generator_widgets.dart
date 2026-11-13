@@ -86,63 +86,116 @@ class PromptInputSection extends StatelessWidget {
 
     return Showcase.withWidget(
       key: showcaseKey,
-      targetShapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), 
+      targetShapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)), 
       container: _CeiShowcaseBubble(
         title: lang.getText('showcase_1_title'), 
         description: lang.getText('showcase_1_desc'),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.auto_awesome, color: Colors.orange.shade400, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    lang.getText('gen_section_title'), 
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              IconButton(
-                icon: const Icon(Icons.info_outline, size: 20, color: Colors.grey),
-                onPressed: onInfoPressed,
-                tooltip: lang.getText('gen_info_btn'), 
-              ),
-            ],
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDarkMode
+                ? [const Color(0xFF2A2A3E), const Color(0xFF1E1E2E)]
+                : [Colors.white, const Color(0xFFFFFAF5)],
           ),
-          const SizedBox(height: 12),
-          Container(
-            decoration: BoxDecoration(
-              color: isDarkMode ? Colors.grey[800] : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.orange.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isDarkMode ? Colors.grey.shade800 : Colors.orange.withOpacity(0.2),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isDarkMode ? Colors.black.withOpacity(0.15) : Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFE67E22), Color(0xFFD35400)],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.edit_note_rounded, color: Colors.white, size: 18),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      lang.getText('gen_section_title'), 
+                      style: TextStyle(
+                        fontSize: 16, 
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: IconButton(
+                    icon: Icon(Icons.info_outline, size: 18, color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600),
+                    onPressed: onInfoPressed,
+                    tooltip: lang.getText('gen_info_btn'),
+                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    padding: EdgeInsets.zero,
+                  ),
                 ),
               ],
-              border: Border.all(color: Colors.orange.withOpacity(0.2)),
             ),
-            child: TextField(
-              controller: controller,
-              enabled: !isOffline,
-              maxLines: 4,
-              style: const TextStyle(fontSize: 16),
-              decoration: InputDecoration(
-                hintText: isOffline 
-                    ? lang.getText('gen_btn_offline') 
-                    : lang.getText('gen_hint_online'),
-                hintStyle: TextStyle(color: Colors.grey.shade400),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.all(16),
+            const SizedBox(height: 16),
+            // Text Input
+            Container(
+              decoration: BoxDecoration(
+                color: isDarkMode ? Colors.black.withOpacity(0.3) : Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade200,
+                ),
+              ),
+              child: TextField(
+                controller: controller,
+                enabled: !isOffline,
+                maxLines: 4,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: isDarkMode ? Colors.white : Colors.black87,
+                ),
+                decoration: InputDecoration(
+                  hintText: isOffline 
+                      ? lang.getText('gen_btn_offline') 
+                      : 'Contoh: "Ayam goreng crispy ala Korea"',
+                  hintStyle: TextStyle(
+                    color: isDarkMode ? Colors.grey.shade600 : Colors.grey.shade400,
+                    fontStyle: FontStyle.italic,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.all(16),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(left: 12, right: 8),
+                    child: Icon(
+                      Icons.lightbulb_outline_rounded,
+                      color: isDarkMode ? Colors.amber.shade600 : Colors.amber.shade700,
+                      size: 22,
+                    ),
+                  ),
+                  prefixIconConstraints: const BoxConstraints(minWidth: 40),
+                ),
               ),
             ),
-          ),
           
           if (userDietPreferences.isNotEmpty)
             userLevel >= 5 
@@ -213,6 +266,7 @@ class PromptInputSection extends StatelessWidget {
           else 
             const SizedBox.shrink(), 
         ],
+        ),
       ),
     );
   }
@@ -642,7 +696,7 @@ class RecipeSettingsSection extends StatelessWidget {
 }
 
 // --- WIDGET 4: GENERATE BUTTON (SHOWCASE 5) ---
-class GenerateButtonSection extends StatelessWidget {
+class GenerateButtonSection extends StatefulWidget {
   final GlobalKey showcaseKey;
   final bool isGenerating;
   final bool isOnCooldown;
@@ -663,42 +717,143 @@ class GenerateButtonSection extends StatelessWidget {
   });
 
   @override
+  State<GenerateButtonSection> createState() => _GenerateButtonSectionState();
+}
+
+class _GenerateButtonSectionState extends State<GenerateButtonSection> with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+    
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.02).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final lang = context.watch<LanguageProvider>();
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isDisabled = widget.isGenerating || widget.isOnCooldown || widget.isOffline;
 
-    String buttonText = lang.getText('gen_btn_start'); // "Buat Resep"
+    String buttonText = lang.getText('gen_btn_start');
+    String buttonEmoji = '✨';
     
-    if (isOnCooldown) {
-      buttonText = "${lang.getText('gen_btn_cooldown')} ($cooldownSeconds s)";
-    } else if (isGenerating) {
-      buttonText = lang.getText('gen_btn_loading'); // "Meracik Resep..."
-    } else if (isOffline) {
+    if (widget.isOnCooldown) {
+      buttonText = "${lang.getText('gen_btn_cooldown')} (${widget.cooldownSeconds}s)";
+      buttonEmoji = '⏳';
+    } else if (widget.isGenerating) {
+      buttonText = lang.getText('gen_btn_loading');
+      buttonEmoji = '🍳';
+    } else if (widget.isOffline) {
       buttonText = lang.getText('gen_btn_offline');
+      buttonEmoji = '📡';
     }
 
     return Showcase.withWidget(
-      key: showcaseKey,
-      targetShapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      targetPadding: const EdgeInsets.all(8), // FIX: Tambahkan padding agar button terlihat
-      overlayOpacity: 0.7, // FIX: Kurangi opacity agar button lebih terlihat
+      key: widget.showcaseKey,
+      targetShapeBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      targetPadding: const EdgeInsets.all(8),
+      overlayOpacity: 0.7,
       container: _CeiShowcaseBubble(
-        title: lang.getText('showcase_5_title'), // "5. Eksekusi!"
+        title: lang.getText('showcase_5_title'),
         description: lang.getText('showcase_5_desc'),
       ),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton.icon(
-          icon: isGenerating
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : Icon(isOffline ? Icons.wifi_off : Icons.auto_awesome),
-          label: Text(buttonText),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: isOffline ? Colors.grey : (isOnCooldown ? Colors.grey : Colors.orange),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: AnimatedBuilder(
+        animation: _pulseAnimation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: isDisabled ? 1.0 : _pulseAnimation.value,
+            child: child,
+          );
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: isDisabled
+                ? []
+                : [
+                    BoxShadow(
+                      color: const Color(0xFFE67E22).withOpacity(0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
           ),
-          onPressed: (isGenerating || isOnCooldown || isOffline) ? null : onPressed,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: isDisabled ? null : widget.onPressed,
+              child: Ink(
+                decoration: BoxDecoration(
+                  gradient: widget.isOffline || widget.isOnCooldown
+                      ? LinearGradient(
+                          colors: isDarkMode
+                              ? [const Color(0xFF374151), const Color(0xFF1F2937)]
+                              : [Colors.grey.shade400, Colors.grey.shade500],
+                        )
+                      : const LinearGradient(
+                          colors: [Color(0xFFE67E22), Color(0xFFD35400)],
+                        ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (widget.isGenerating)
+                        const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      else
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(buttonEmoji, style: const TextStyle(fontSize: 18)),
+                        ),
+                      const SizedBox(width: 12),
+                      Text(
+                        buttonText,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      if (!widget.isGenerating && !widget.isOffline && !widget.isOnCooldown) ...[
+                        const SizedBox(width: 8),
+                        const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
